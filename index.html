@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>起動画面</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: sans-serif;
+        }
+        .start-button {
+            padding: 20px 40px;
+            font-size: 2em;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px #388E3C;
+            transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
+        }
+        .start-button:active {
+            background-color: #367C39;
+            transform: translateY(3px);
+            box-shadow: 0 2px #388E3C;
+        }
+    </style>
+</head>
+<body>
+    <button class="start-button" id="startButton">ゲームスタート</button>
+
+    <script>
+        document.getElementById('startButton').addEventListener('click', function() {
+            // 遅延なしでgame.htmlに遷移
+            window.location.href = 'game.html';
+        });
+    </script>
+</body>
+</html>
