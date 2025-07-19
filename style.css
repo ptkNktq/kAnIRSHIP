@@ -2,858 +2,790 @@
 
 /* 全体のレイアウト設定 */
 body {
-    display: grid; /* Gridレイアウトを使用 */
-    grid-template-columns: 300px 1fr 300px; /* 左UI(固定幅), メインコンテンツ(可変), ログ(固定幅: 300px) */
-    grid-template-rows: 1fr; /* 1行のみに戻す */
-    gap: 20px; /* グリッドアイテム間の隙間 */
-    padding: 20px; /* 全体のパディング */
-    min-height: 100vh;
-    margin: 0;
-    background-color: #D2B48C; /* 明るい茶色 */
-    font-family: 'Inter', sans-serif;
-    color: #00796B;
-    overflow: hidden; /* スクロールバーが出ないようにする */
+  display: grid; /* Gridレイアウトを使用 */
+  grid-template-columns: 300px 1fr 300px; /* 左UI(固定幅), メインコンテンツ(可変), ログ(固定幅: 300px) */
+  grid-template-rows: 1fr; /* 1行のみに戻す */
+  gap: 20px; /* グリッドアイテム間の隙間 */
+  padding: 20px; /* 全体のパディング */
+  min-height: 100vh;
+  margin: 0;
+  background-color: #d2b48c; /* 明るい茶色 */
+  font-family: "Inter", sans-serif;
+  color: #00796b;
+  overflow: hidden; /* スクロールバーが出ないようにする */
 }
 
 /* モーダルオーバーレイのスタイル */
 .modal-overlay {
-    position: fixed; /* 画面全体に固定 */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* 半透明の黒 */
-    z-index: 9; /* インベントリの下、他の要素の上 */
-    display: none; /* 初期状態では非表示 */
+  position: fixed; /* 画面全体に固定 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明の黒 */
+  z-index: 9; /* インベントリの下、他の要素の上 */
+  display: none; /* 初期状態では非表示 */
 }
 
 /* モーダルが開いている状態のクラス */
 .modal-content-wrapper.is-open {
-    display: flex; /* is-openクラスが付いたら表示 */
+  display: flex; /* is-openクラスが付いたら表示 */
 }
 
 /* モーダルコンテンツラッパーのスタイル */
 .modal-content-wrapper {
-    position: fixed; /* 画面中央に固定 */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* 中央揃えのテクニック */
-    display: none; /* 初期状態では非表示 */
-    z-index: 10; /* 最前面に表示 */
-    align-items: center; /* 垂直方向中央揃え */
-    gap: 20px; /* アイテムリストとインベントリの間の隙間 */
-    max-width: 95vw; /* 画面幅の95%まで */
-    max-height: 95vh; /* 画面高さの95%まで */
-    box-sizing: border-box;
-    padding: 10px; /* ラッパー自体のパディング */
+  position: fixed; /* 画面中央に固定 */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* 中央揃えのテクニック */
+  display: none; /* 初期状態では非表示 */
+  z-index: 10; /* 最前面に表示 */
+  align-items: center; /* 垂直方向中央揃え */
+  gap: 20px; /* アイテムリストとインベントリの間の隙間 */
+  max-width: 95vw; /* 画面幅の95%まで */
+  max-height: 95vh; /* 画面高さの95%まで */
+  box-sizing: border-box;
+  padding: 10px; /* ラッパー自体のパディング */
 }
-
 
 /* インベントリコンテナのスタイル */
 .inventory-container {
-    background-color: rgba(44, 62, 80, 0.95); /* 半透明の暗い背景 */
-    border: 2px solid #34495e; /* ボーダー */
-    border-radius: 10px; /* 角を丸く */
-    padding: 20px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* 影 */
-    max-width: 90%; /* コンテンツの最大幅を維持 */
-    max-height: 90%; /* コンテンツの最大高さを維持 */
-    box-sizing: border-box;
-    flex-shrink: 0; /* 縮小しない */
-    display: flex; /* タイトルとグリッドを縦に並べるため */
-    flex-direction: column; /* 縦並び */
+  background-color: rgba(44, 62, 80, 0.95); /* 半透明の暗い背景 */
+  border: 2px solid #34495e; /* ボーダー */
+  border-radius: 10px; /* 角を丸く */
+  padding: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* 影 */
+  max-width: 90%; /* コンテンツの最大幅を維持 */
+  max-height: 90%; /* コンテンツの最大高さを維持 */
+  box-sizing: border-box;
+  flex-shrink: 0; /* 縮小しない */
+  display: flex; /* タイトルとグリッドを縦に並べるため */
+  flex-direction: column; /* 縦並び */
+}
+
+/* 船体コンテナのタイトルスタイル */
+.inventory-container .inventory-title {
+  /* 親要素を指定してより具体的に */
+  color: #f39c12; /* オレンジ色で強調 */
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+  border-bottom: 1px solid #505050;
+  padding-bottom: 5px;
+  flex-shrink: 0;
+  display: flex; /* タイトルと(E)を横並びにするため */
+  justify-content: center; /* 中央寄せ */
+  align-items: baseline; /* ベースラインを揃える */
 }
 
 /* インベントリグリッドのスタイル */
 .inventory-grid {
-    display: grid; /* グリッドレイアウトを使用 */
-    grid-template-columns: repeat(6, 1fr); /* 6列のグリッド */
-    gap: 10px; /* セル間の隙間 */
-    width: 100%; /* 親要素に合わせて幅を調整 */
-    height: 100%; /* 親要素に合わせて高さを調整 */
+  display: grid; /* グリッドレイアウトを使用 */
+  grid-template-columns: repeat(4, 1fr); /* 常に4列のグリッド */
+  gap: 10px; /* セル間の隙間 */
+  width: 100%; /* 親要素に合わせて幅を調整 */
+  height: 100%; /* 親要素に合わせて高さを調整 */
 }
 
 /* インベントリセルのスタイル */
 .inventory-cell {
-    width: 60px; /* セルの幅 */
-    height: 60px; /* セルの高さ */
-    background-color: #2c3e50; /* セルの背景色 */
-    border: 1px solid #34495e; /* セルのボーダー */
-    border-radius: 5px; /* 角を丸く */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #ecf0f1; /* 文字色 */
-    font-size: 0.8em;
-    cursor: pointer; /* カーソルをポインターに */
-    transition: background-color 0.1s; /* ホバー時のアニメーション */
+  width: 60px; /* セルの幅 */
+  height: 60px; /* セルの高さ */
+  background-color: #2c3e50; /* セルの背景色 */
+  border: 1px solid #34495e; /* セルのボーダー */
+  border-radius: 5px; /* 角を丸く */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ecf0f1; /* 文字色 */
+  font-size: 0.8em;
+  cursor: pointer; /* カーソルをポインターに */
+  transition: background-color 0.1s; /* ホバー時のアニメーション */
 }
 
 /* 左側のUI要素をまとめるコンテナ */
 .left-ui-container {
-    grid-column: 1; /* 1列目に配置 */
-    grid-row: 1; /* 1行目に配置 */
-    display: flex;
-    flex-direction: column; /* 子要素を縦に並べる */
-    gap: 20px; /* 各エリア間の隙間 */
-    z-index: 5; /* 他の背景要素より手前に表示 */
-    box-sizing: border-box; /* パディングとボーダーを幅に含める */
-    height: 100%; /* グリッドアイテムの高さを100%にする */
+  grid-column: 1; /* 1列目に配置 */
+  grid-row: 1; /* 1行目に配置 */
+  display: flex;
+  flex-direction: column; /* 子要素を縦に並べる */
+  gap: 20px; /* 各エリア間の隙間 */
+  z-index: 5; /* 他の背景要素より手前に表示 */
+  box-sizing: border-box; /* パディングとボーダーを幅に含める */
+  height: 100%; /* グリッドアイテムの高さを100%にする */
 }
 
 /* 飛行船表示エリアのスタイル */
 .airship-display-area {
-    position: relative; /* バッグアイコンを絶対配置するために必要 */
-    width: 100%; /* 親コンテナの幅いっぱいに広がる */
-    height: 200px; /* 高さは固定 */
-    border: 5px solid #5C4033;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-    background-color: #a7d9f7;
-    display: flex; /* 内部の要素を中央に配置するためにFlexboxを使用 */
-    justify-content: center; /* 水平方向の中央揃え */
-    align-items: center; /* 垂直方向の中央揃え */
-    flex-shrink: 0; /* 親のFlexboxコンテナ内で縮小しないように明示 */
-    flex-grow: 0; /* 親のFlexboxコンテナ内で拡大しないように明示 */
-    box-sizing: border-box; /* パディングとボーダーを幅に含める */
+  position: relative; /* バッグアイコンを絶対配置するために必要 */
+  width: 100%; /* 親コンテナの幅いっぱいに広がる */
+  height: 200px; /* 高さは固定 */
+  border: 5px solid #5c4033;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
+  background-color: #a7d9f7;
+  display: flex; /* 内部の要素を中央に配置するためにFlexboxを使用 */
+  justify-content: center; /* 水平方向の中央揃え */
+  align-items: center; /* 垂直方向の中央揃え */
+  flex-shrink: 0; /* 親のFlexboxコンテナ内で縮小しないように明示 */
+  flex-grow: 0; /* 親のFlexboxコンテナ内で拡大しないように明示 */
+  box-sizing: border-box; /* パディングとボーダーを幅に含める */
 }
 
 /* 飛行船コンテナのスタイル */
 .airship-container {
-    width: 200px;
-    height: 150px;
+  width: 200px;
+  height: 150px;
 }
 
 /* ドット絵風バッグアイコンのコンテナ */
 .bag-icon-container {
-    position: absolute;
-    bottom: 10px; /* 下からの距離 */
-    right: 10px; /* 右からの距離 */
-    width: 48px; /* アイコンのサイズ */
-    height: 48px; /* アイコンのサイズ */
-    cursor: pointer;
-    z-index: 7; /* 飛行船より手前に表示 */
-    background-color: rgba(255, 255, 255, 0.2); /* 半透明の背景で視認性向上 */
-    border-radius: 8px; /* 角を丸く */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.1s ease-out; /* ホバー時のアニメーション */
+  position: absolute;
+  bottom: 10px; /* 下からの距離 */
+  right: 10px; /* 右からの距離 */
+  width: 48px; /* アイコンのサイズ */
+  height: 48px; /* アイコンのサイズ */
+  cursor: pointer;
+  z-index: 7; /* 飛行船より手前に表示 */
+  background-color: rgba(255, 255, 255, 0.2); /* 半透明の背景で視認性向上 */
+  border-radius: 8px; /* 角を丸く */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.1s ease-out; /* ホバー時のアニメーション */
 }
 
 .bag-icon-container:hover {
-    transform: scale(1.1); /* ホバーで少し拡大 */
+  transform: scale(1.1); /* ホバーで少し拡大 */
 }
 
 .bag-icon-container:active {
-    transform: scale(0.95); /* クリックで少し縮小 */
+  transform: scale(0.95); /* クリックで少し縮小 */
 }
 
 .bag-icon-svg {
-    width: 80%; /* コンテナ内でSVGを少し小さめに表示 */
-    height: 80%;
-    display: block;
+  width: 80%; /* コンテナ内でSVGを少し小さめに表示 */
+  height: 80%;
+  display: block;
 }
-
 
 /* ゲーム情報表示エリアのスタイル */
 .game-info-area {
-    position: static;
-    width: 100%; /* 親コンテナの幅いっぱいに広がる */
-    padding: 10px;
-    background-color: rgba(60, 60, 60, 0.8);
-    border: 3px solid #404040;
-    border-radius: 10px;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-    color: #ecf0f1;
-    font-size: 1.2em;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    box-sizing: border-box; /* パディングとボーダーを幅に含める */
-    flex-shrink: 0; /* 親のFlexboxコンテナ内で縮小しないように明示 */
-    flex-grow: 0; /* 親のFlexboxコンテナ内で拡大しないように明示 */
+  position: static;
+  width: 100%; /* 親コンテナの幅いっぱいに広がる */
+  padding: 10px;
+  background-color: rgba(60, 60, 60, 0.8);
+  border: 3px solid #404040;
+  border-radius: 10px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  color: #ecf0f1;
+  font-size: 1.2em;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box; /* パディングとボーダーを幅に含める */
+  flex-shrink: 0; /* 親のFlexboxコンテナ内で縮小しないように明示 */
+  flex-grow: 0; /* 親のFlexboxコンテナ内で拡大しないように明示 */
 }
 
 .game-info-item {
-    padding: 5px;
-    border: 1px solid #505050;
-    border-radius: 5px;
-    background-color: rgba(80, 80, 80, 0.7);
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+  padding: 5px;
+  border: 1px solid #505050;
+  border-radius: 5px;
+  background-color: rgba(80, 80, 80, 0.7);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .game-info-label {
-    font-weight: bold;
-    color: #f39c12;
-    margin-right: 5px;
+  font-weight: bold;
+  color: #f39c12;
+  margin-right: 5px;
 }
 
 .health-bar-container,
-.fuel-bar-container { /* 燃料ゲージにも同じスタイルを適用 */
-    width: 80%;
-    height: 20px;
-    background-color: #505050;
-    border: 1px solid #404040;
-    border-radius: 3px;
-    margin: 0 auto;
-    overflow: hidden;
-    flex-grow: 1;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.fuel-bar-container {
+  /* 燃料ゲージにも同じスタイルを適用 */
+  height: 20px;
+  background-color: #505050;
+  border: 1px solid #404040;
+  border-radius: 3px;
+  margin: 0 auto;
+  overflow: hidden;
+  flex-grow: 1; /* 残りのスペースを埋める */
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .health-bar {
-    height: 100%;
-    width: 100%;
-    background-color: #27ae60;
-    transition: width 0.3s ease-in-out;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
+  height: 100%;
+  width: 100%;
+  background-color: #27ae60;
+  transition: width 0.3s ease-in-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
-.fuel-bar { /* 燃料ゲージのバーのスタイル */
-    height: 100%;
-    width: 100%;
-    background-color: #3498db; /* 青色 */
-    transition: width 0.3s ease-in-out;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
+.fuel-bar {
+  /* 燃料ゲージのバーのスタイル */
+  height: 100%;
+  width: 100%;
+  background-color: #3498db; /* 青色 */
+  transition: width 0.3s ease-in-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .health-value-overlay,
-.fuel-value-overlay { /* 燃料ゲージの数値表示にも同じスタイルを適用 */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
-    color: white;
-    font-size: 0.9em;
-    text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
-    white-space: nowrap;
+.fuel-value-overlay {
+  /* 燃料ゲージの数値表示にも同じスタイルを適用 */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  color: white;
+  font-size: 0.9em;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+  white-space: nowrap; /* テキストが改行されないようにする */
 }
 
 .weather-icon-container {
-    width: 24px;
-    height: 24px;
-    margin-left: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
 .weather-icon-svg {
-    width: 100%;
-    height: 100%;
-    display: none;
+  width: 100%;
+  height: 100%;
+  display: none;
 }
 
 /* アイテム一覧エリアのスタイル */
 .item-list-area {
-    width: 200px; /* アイテムリストの幅 */
-    height: 500px; /* アイテムリストの高さ - 固定高さを設定 */
-    padding: 15px;
-    background-color: rgba(44, 62, 80, 0.9); /* 暗めの半透明背景 */
-    border: 3px solid #34495e; /* ボーダー */
-    border-radius: 10px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    color: #ecf0f1;
-    font-size: 1em;
-    flex-shrink: 0; /* 縮小しない */
-    display: flex; /* Flexboxで子要素を縦に並べる */
-    flex-direction: column; /* 縦並び */
+  width: 200px; /* アイテムリストの幅 */
+  height: 500px; /* アイテムリストの高さ - 固定高さを設定 */
+  padding: 15px;
+  background-color: rgba(44, 62, 80, 0.9); /* 暗めの半透明背景 */
+  border: 3px solid #34495e; /* ボーダー */
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  color: #ecf0f1;
+  font-size: 1em;
+  flex-shrink: 0; /* 縮小しない */
+  display: flex; /* Flexboxで子要素を縦に並べる */
+  flex-direction: column; /* 縦並び */
 }
 
+/* アイテムリストのタイトルスタイル */
 .item-list-title {
-    color: #f39c12; /* オレンジ色で強調 */
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.3em;
-    border-bottom: 1px solid #505050;
-    padding-bottom: 5px;
-    flex-shrink: 0;
-    display: flex; /* タイトルと(E)を横並びにするため */
-    justify-content: center; /* 中央寄せ */
-    align-items: baseline; /* ベースラインを揃える */
+  color: #f39c12; /* オレンジ色で強調 */
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+  border-bottom: 1px solid #505050;
+  padding-bottom: 5px;
+  flex-shrink: 0;
+  display: flex; /* タイトルと(E)を横並びにするため */
+  justify-content: center; /* 中央寄せ */
+  align-items: baseline; /* ベースラインを揃える */
 }
 
 .inventory-open-key {
-    font-size: 0.7em; /* (E)を小さくする */
-    margin-left: 5px; /* タイトルとの間に少しスペース */
-    color: #99CCFF; /* 少し明るい色に */
-    font-weight: normal; /* 太字にしない */
+  font-size: 0.7em; /* (E)を小さくする */
+  margin-left: 5px; /* タイトルとの間に少しスペース */
+  color: #99ccff; /* 少し明るい色に */
+  font-weight: normal; /* 太字にしない */
 }
 
 .available-items-list {
-    list-style: none; /* デフォルトのリストスタイルを削除 */
-    padding: 0;
-    padding-right: 15px; /* スクロールバーとアイテムの間にマージンを追加 */
-    margin: 0;
-    flex-grow: 1; /* 残りのスペースを全て使う */
-    overflow-y: auto; /* ここでスクロールを有効にする */
+  list-style: none; /* デフォルトのリストスタイルを削除 */
+  padding: 0;
+  padding-right: 15px; /* スクロールバーとアイテムの間にマージンを追加 */
+  margin: 0;
+  flex-grow: 1; /* 残りのスペースを全て使う */
+  overflow-y: auto; /* ここでスクロールを有効にする */
 }
 
 .available-items-list li {
-    background-color: rgba(80, 80, 80, 0.7);
-    border: 1px solid #505050;
-    border-radius: 5px;
-    padding: 8px;
-    margin-bottom: 5px;
-    cursor: pointer;
-    transition: background-color 0.1s;
-    display: flex;
-    justify-content: space-between; /* アイテム名と数量を左右に配置 */
-    align-items: center;
+  background-color: rgba(80, 80, 80, 0.7);
+  border: 1px solid #505050;
+  border-radius: 5px;
+  padding: 8px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+  display: flex;
+  justify-content: space-between; /* アイテム名と数量を左右に配置 */
+  align-items: center;
 }
 
 .available-items-list li:hover {
-    background-color: #34495e;
+  background-color: #34495e;
 }
 
 .item-quantity {
-    color: #99CCFF;
-    font-weight: bold;
+  color: #99ccff;
+  font-weight: bold;
 }
 
 /* メッセージ表示エリアのスタイル */
 .message-area {
-    grid-column: 3; /* 3列目に配置 */
-    grid-row: 1; /* 1行目を占める */
-    padding: 15px;
-    background-color: rgba(60, 60, 60, 0.8);
-    border: 3px solid #404040;
-    border-radius: 10px;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-    color: #ecf0f1;
-    font-size: 1em;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    height: calc(100vh - 40px); /* ログエリアの高さを画面いっぱいに戻す */
+  grid-column: 3; /* 3列目に配置 */
+  grid-row: 1; /* 1行目を占める */
+  padding: 15px;
+  background-color: rgba(60, 60, 60, 0.8);
+  border: 3px solid #404040;
+  border-radius: 10px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  color: #ecf0f1;
+  font-size: 1em;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: calc(100vh - 40px); /* ログエリアの高さを画面いっぱいに戻す */
 }
 
 .message-area-title {
-    color: #f39c12;
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.3em;
-    border-bottom: 1px solid #505050;
-    padding-bottom: 5px;
-    flex-shrink: 0; /* Prevent title from shrinking */
+  color: #f39c12;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.3em;
+  border-bottom: 1px solid #505050;
+  padding-bottom: 5px;
+  flex-shrink: 0; /* Prevent title from shrinking */
 }
 
 .message-log {
-    flex-grow: 1; /* Make log take up all available space */
-    overflow-y: auto; /* ここでスクロールを有効にする */
-    padding-right: 10px;
-    font-size: 0.9em;
-    line-height: 1.4;
+  flex-grow: 1; /* Make log take up all available space */
+  overflow-y: auto; /* ここでスクロールを有効にする */
+  padding-right: 10px;
+  font-size: 0.9em;
+  line-height: 1.4;
 }
 
 .message-log p {
-    margin: 0 0 5px 0;
-    padding: 3px 0;
-    border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+  margin: 0 0 5px 0;
+  padding: 3px 0;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
 }
 
 .message-log p:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
-
-/* ショートカット表示ボタンのスタイル (全て削除) */
-/* .shortcut-button {
-    grid-column: 3;
-    grid-row: 2;
-    margin-top: 10px;
-    padding: 5px 15px;
-    font-size: 0.9em;
-    cursor: pointer;
-    background-color: #556B2F;
-    color: #ecf0f1;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 3px #3D4F22;
-    transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
-    outline: none;
-    justify-self: center;
-    width: fit-content;
-    white-space: nowrap;
-}
-
-.shortcut-button:hover {
-    background-color: #3D4F22;
-}
-
-.shortcut-button:active {
-    background-color: #2A3818;
-    transform: translateY(1px);
-    box-shadow: 0 1px #3D4F22;
-} */
-
-/* ショートカットリストエリアのスタイル (全て削除) */
-/* .shortcut-list-area {
-    width: 300px;
-    height: auto;
-    max-height: 80vh;
-    padding: 15px;
-    background-color: rgba(44, 62, 80, 0.9);
-    border: 3px solid #34495e;
-    border-radius: 10px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    color: #ecf0f1;
-    font-size: 1em;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-}
-
-.shortcut-list-title {
-    color: #f39c12;
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.3em;
-    border-bottom: 1px solid #505050;
-    padding-bottom: 5px;
-}
-
-.shortcut-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    overflow-y: auto;
-    flex-grow: 1;
-}
-
-.shortcut-list li {
-    background-color: rgba(80, 80, 80, 0.7);
-    border: 1px solid #505050;
-    border-radius: 5px;
-    padding: 8px;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9em;
-}
-
-.shortcut-list li:last-child {
-    margin-bottom: 0;
-}
-
-.shortcut-key {
-    font-weight: bold;
-    color: #99CCFF;
-    margin-right: 10px;
-} */
 
 /* メインコンテンツエリアのスタイル */
 .main-content-area {
-    grid-column: 2; /* 2列目に配置 */
-    grid-row: 1; /* 1行目のみを占めるように変更 */
-    background-color: rgba(255, 255, 255, 0.7); /* 半透明の白 */
-    border: 3px solid #404040;
-    border-radius: 10px;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-    box-sizing: border-box; /* パディングとボーダーを幅に含める */
-    overflow-y: auto; /* コンテンツが溢れたらスクロール */
-    z-index: 4; /* 他のUI要素より少し奥に */
-    color: #333; /* 文字色を濃い灰色に */
-    display: flex; /* Flexboxを使って縦に並べる */
-    flex-direction: column;
-    height: calc(100vh - 40px); /* ウィンドウの高さから上下のパディングを引いた値に制限 */
+  grid-column: 2; /* 2列目に配置 */
+  grid-row: 1; /* 1行目のみを占めるように変更 */
+  background-color: rgba(255, 255, 255, 0.7); /* 半透明の白 */
+  border: 3px solid #404040;
+  border-radius: 10px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  box-sizing: border-box; /* パディングとボーダーを幅に含める */
+  overflow-y: auto; /* コンテンツが溢れたらスクロール */
+  z-index: 4; /* 他のUI要素より少し奥に */
+  color: #333; /* 文字色を濃い灰色に */
+  display: flex; /* Flexboxを使って縦に並べる */
+  flex-direction: column;
+  height: calc(
+    100vh - 40px
+  ); /* ウィンドウの高さから上下のパディングを引いた値に制限 */
 }
 
 .main-content-title {
-    color: #00796B; /* アクセントカラー */
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.5em;
-    border-bottom: 2px solid #00796B;
-    padding-bottom: 5px;
+  color: #00796b; /* アクセントカラー */
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  border-bottom: 2px solid #00796b;
+  padding-bottom: 5px;
 }
 
 .main-content-area p {
-    margin-bottom: 10px;
-    line-height: 1.6;
+  margin-bottom: 10px;
+  line-height: 1.6;
 }
 
 /* 選択肢コンテナのスタイル */
 .choices-container {
-    display: flex;
-    flex-direction: column; /* ボタンを縦に並べる */
-    gap: 10px; /* ボタン間の隙間 */
-    margin-top: 20px;
-    align-items: center; /* 水平方向の中央揃え */
+  display: flex;
+  flex-direction: column; /* ボタンを縦に並べる */
+  gap: 10px; /* ボタン間の隙間 */
+  margin-top: 20px;
+  align-items: center; /* 水平方向の中央揃え */
 }
 
 /* 各セクションのタイトルスタイル */
 .action-section-title,
 .ship-section-title {
-    color: #00796B; /* アクセントカラー */
-    text-align: center;
-    margin-top: 15px; /* サブタイトル上部のマージンを少し狭く */
-    margin-bottom: 5px; /* サブタイトル下部のマージンを狭く */
-    font-size: 1.3em;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* 区切り線 */
-    padding-bottom: 5px;
-    width: 80%; /* choices-containerのボタンと幅を合わせる */
-    max-width: 300px; /* choices-containerのボタンと最大幅を合わせる */
+  color: #00796b; /* アクセントカラー */
+  text-align: center;
+  margin-top: 15px; /* サブタイトル上部のマージンを少し狭く */
+  margin-bottom: 5px; /* サブタイトル下部のマージンを狭く */
+  font-size: 1.3em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* 区切り線 */
+  padding-bottom: 5px;
+  width: 80%; /* choices-containerのボタンと幅を合わせる */
+  max-width: 300px; /* choices-containerのボタンと最大幅を合わせる */
 }
 
 /* 各ボタンラッパーの基本スタイル */
 .action-buttons-wrapper,
 .ship-buttons-wrapper,
-.departure-buttons-wrapper { /* 新しい出航系ボタンラッパー */
-    display: flex;
-    flex-direction: column; /* ボタンを縦に並べる */
-    gap: 10px; /* ボタン間の隙間 */
-    margin-top: 5px; /* ラッパー上部のマージンを狭く */
-    width: 80%; /* choices-containerのボタンと幅を合わせる */
-    max-width: 300px; /* choices-containerのボタンと最大幅を合わせる */
-    align-items: center; /* 中央揃え */
+.departure-buttons-wrapper {
+  /* 新しい出航系ボタンラッパー */
+  display: flex;
+  flex-direction: column; /* ボタンを縦に並べる */
+  gap: 10px; /* ボタン間の隙間 */
+  margin-top: 5px; /* ラッパー上部のマージンを狭く */
+  width: 80%; /* choices-containerのボタンと幅を合わせる */
+  max-width: 300px; /* choices-containerのボタンと最大幅を合わせる */
+  align-items: center; /* 中央揃え */
 }
 
 /* 出航系ボタンラッパーの横線スタイル */
 .departure-buttons-wrapper {
-    padding-top: 15px; /* 上部に余白 */
-    border-top: 1px solid rgba(0, 0, 0, 0.1); /* 上部に区切り線 */
+  padding-top: 15px; /* 上部に余白 */
+  border-top: 1px solid rgba(0, 0, 0, 0.1); /* 上部に区切り線 */
 }
-
 
 /* 選択肢ボタンの基本スタイル */
 .choice-button {
-    padding: 10px 20px;
-    font-size: 1.1em;
-    cursor: pointer;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
-    outline: none;
-    width: 100%; /* 親コンテナの幅いっぱいに広がる */
-    text-align: center;
+  padding: 10px 20px;
+  font-size: 1.1em;
+  cursor: pointer;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
+  outline: none;
+  width: 100%; /* 親コンテナの幅いっぱいに広がる */
+  text-align: center;
 }
-
 
 /* デフォルトの選択肢ボタンの色 (物資補給、船修理など) */
 .choice-button-default {
-    background-color: #00796B; /* アクセントカラー */
-    box-shadow: 0 4px #004D40; /* 立体的な影 */
+  background-color: #00796b; /* アクセントカラー */
+  box-shadow: 0 4px #004d40; /* 立体的な影 */
 }
 
 .choice-button-default:hover {
-    background-color: #004D40; /* ホバー時の色 */
+  background-color: #004d40; /* ホバー時の色 */
 }
 
 .choice-button-default:active {
-    background-color: #00332B; /* クリック時の色 */
-    transform: translateY(2px); /* 少し下に移動 */
-    box-shadow: 0 2px #004D40; /* 影を小さくする */
+  background-color: #00332b; /* クリック時の色 */
+  transform: translateY(2px); /* 少し下に移動 */
+  box-shadow: 0 2px #004d40; /* 影を小さくする */
 }
 
 /* 航海に出る/停泊するボタンの色 (強調) */
 .choice-button-primary {
-    background-color: #3498db; /* 青色 */
-    box-shadow: 0 4px #2980b9; /* 立体的な影 */
+  background-color: #3498db; /* 青色 */
+  box-shadow: 0 4px #2980b9; /* 立体的な影 */
 }
 
 .choice-button-primary:hover {
-    background-color: #2980b9; /* ホバー時の色 */
+  background-color: #2980b9; /* ホバー時の色 */
 }
 
 .choice-button-primary:active {
-    background-color: #2471a3; /* クリック時の色 */
-    transform: translateY(2px); /* 少し下に移動 */
-    box-shadow: 0 2px #2980b9; /* 影を小さくする */
+  background-color: #2471a3; /* クリック時の色 */
+  transform: translateY(2px); /* 少し下に移動 */
+  box-shadow: 0 2px #2980b9; /* 影を小さくする */
 }
 
 /* 無効化されたボタンのスタイル */
 .choice-button:disabled {
-    background-color: #cccccc; /* グレーアウト */
-    box-shadow: 0 2px #999999; /* 影を薄く */
-    cursor: not-allowed; /* カーソルを禁止マークに */
-    transform: translateY(0); /* 押し込み効果を無効に */
+  background-color: #cccccc; /* グレーアウト */
+  box-shadow: 0 2px #999999; /* 影を薄く */
+  cursor: not-allowed; /* カーソルを禁止マークに */
+  transform: translateY(0); /* 押し込み効果を無効に */
 }
 
 .choice-button:disabled:hover {
-    background-color: #cccccc; /* ホバー時もグレーアウトのまま */
-    transform: translateY(0);
-    box-shadow: 0 2px #999999;
+  background-color: #cccccc; /* ホバー時もグレーアウトのまま */
+  transform: translateY(0);
+  box-shadow: 0 2px #999999;
 }
-
 
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
-    body {
-        grid-template-columns: 225px 1fr; /* 左UIとメインコンテンツ */
-        grid-template-rows: 1fr auto; /* メインコンテンツは1行目、ログは2行目 */
-        padding: 15px; /* 全体のパディングを調整 */
-        gap: 15px; /* グリッドアイテム間の隙間を調整 */
-    }
-    .left-ui-container {
-        grid-column: 1;
-        grid-row: 1;
-        width: auto; /* Gridが幅を管理 */
-    }
-    .main-content-area {
-        grid-column: 2;
-        grid-row: 1;
-        width: auto; /* Gridが幅を管理 */
-        height: calc(100vh - 30px); /* レスポンシブでは自動調整 */
-    }
-    .message-area {
-        grid-column: 1 / span 2; /* 2列にまたがる */
-        grid-row: 2; /* 2行目に配置 */
-        height: 280px; /* 高さを調整 */
-        width: auto; /* Gridが幅を管理 */
-        padding: 10px; /* パディングを調整 */
-    }
-    /* .shortcut-button のスタイルは削除されたため、ここも削除 */
+  body {
+    grid-template-columns: 225px 1fr; /* 左UIとメインコンテンツ */
+    grid-template-rows: 1fr auto; /* メインコンテンツは1行目、ログは2行目 */
+    padding: 15px; /* 全体のパディングを調整 */
+    gap: 15px; /* グリッドアイテム間の隙間を調整 */
+  }
+  .left-ui-container {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto; /* Gridが幅を管理 */
+  }
+  .main-content-area {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto; /* Gridが幅を管理 */
+    height: calc(100vh - 30px); /* レスポンシブでは自動調整 */
+  }
+  .message-area {
+    grid-column: 1 / span 2; /* 2列にまたがる */
+    grid-row: 2; /* 2行目に配置 */
+    height: 280px; /* 高さを調整 */
+    width: auto; /* Gridが幅を管理 */
+    padding: 10px; /* パディングを調整 */
+  }
+  /* モーダルコンテンツラッパーのレスポンシブ調整 (変更なし) */
+  .modal-content-wrapper {
+    gap: 15px;
+  }
+  .inventory-cell {
+    width: 45px;
+    height: 45px;
+  }
+  /* 768px以下でも、船体コンテナのグリッドは4列を維持 */
+  .inventory-grid {
+    grid-template-columns: repeat(4, 1fr); /* 常に4列を維持 */
+    gap: 5px;
+  }
+  /* 飛行船表示エリアのレスポンシブ調整 */
+  .airship-display-area {
+    height: 150px; /* 高さを調整 */
+    border-width: 4px;
+    border-radius: 12px;
+  }
+  /* 飛行船コンテナのレスポンシブ調整 */
+  .airship-container {
+    width: 150px;
+    height: 112.5px;
+  }
+  /* ドット絵風バッグアイコンのコンテナのレスポンシブ調整 */
+  .bag-icon-container {
+    width: 40px;
+    height: 40px;
+    bottom: 8px;
+    right: 8px;
+  }
+  /* ゲーム情報表示エリアのレスポンシブ調整 (変更なし) */
+  .game-info-area {
+    padding: 8px;
+    border-width: 2px;
+    border-radius: 8px;
+    font-size: 1em;
+    gap: 6px;
+  }
+  .health-bar-container,
+  .fuel-bar-container {
+    /* 燃料ゲージにも同じスタイルを適用 */
+    height: 16px;
+  }
+  .weather-icon-container {
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+  }
+  .health-value-overlay,
+  .fuel-value-overlay {
+    /* 燃料ゲージの数値表示にも同じスタイルを適用 */
+    font-size: 0.8em;
+  }
+  /* アイテム一覧エリアのレスポンシブ調整 (変更なし) */
+  .item-list-area {
+    width: 150px;
+    height: 300px;
+    padding: 10px;
+    border-width: 2px;
+    border-radius: 8px;
+    font-size: 0.9em;
+  }
+  .item-list-title {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+  }
+  .available-items-list li {
+    padding: 6px;
+    margin-bottom: 3px;
+  }
+  /* メッセージ表示エリアのレスポンシブ調整 */
+  .message-area-title {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+  }
+  .message-log {
+    padding-right: 8px;
+  }
 
-    /* モーダルコンテンツラッパーのレスポンシブ調整 (変更なし) */
-    .modal-content-wrapper {
-        gap: 15px;
-    }
-    .inventory-cell {
-        width: 45px;
-        height: 45px;
-    }
-    .inventory-grid {
-        gap: 5px;
-    }
-    /* 飛行船表示エリアのレスポンシブ調整 */
-    .airship-display-area {
-        height: 150px; /* 高さを調整 */
-        border-width: 4px;
-        border-radius: 12px;
-    }
-    /* 飛行船コンテナのレスポンシブ調整 */
-    .airship-container {
-        width: 150px;
-        height: 112.5px;
-    }
-    /* ドット絵風バッグアイコンのコンテナのレスポンシブ調整 */
-    .bag-icon-container {
-        width: 40px;
-        height: 40px;
-        bottom: 8px;
-        right: 8px;
-    }
-    /* ゲーム情報表示エリアのレスポンシブ調整 (変更なし) */
-    .game-info-area {
-        padding: 8px;
-        border-width: 2px;
-        border-radius: 8px;
-        font-size: 1em;
-        gap: 6px;
-    }
-    .health-bar-container,
-    .fuel-bar-container { /* 燃料ゲージにも同じスタイルを適用 */
-        height: 16px;
-    }
-    .weather-icon-container {
-        width: 20px;
-        height: 20px;
-        margin-left: 8px;
-    }
-    .health-value-overlay,
-    .fuel-value-overlay { /* 燃料ゲージの数値表示にも同じスタイルを適用 */
-        font-size: 0.8em;
-    }
-    /* アイテム一覧エリアのレスポンシブ調整 (変更なし) */
-    .item-list-area {
-        width: 150px;
-        height: 300px;
-        padding: 10px;
-        border-width: 2px;
-        border-radius: 8px;
-        font-size: 0.9em;
-    }
-    .item-list-title {
-        font-size: 1.1em;
-        margin-bottom: 10px;
-    }
-    .available-items-list li {
-        padding: 6px;
-        margin-bottom: 3px;
-    }
-    /* メッセージ表示エリアのレスポンシブ調整 */
-    .message-area-title {
-        font-size: 1.1em;
-        margin-bottom: 8px;
-    }
-    .message-log {
-        padding-right: 8px;
-    }
+  /* メインコンテンツエリアのレスポンシブ調整 */
+  .main-content-title {
+    font-size: 1.3em;
+  }
 
-    /* メインコンテンツエリアのレスポンシブ調整 */
-    .main-content-title {
-        font-size: 1.3em;
-    }
-
-    /* 選択肢ボタンのレスポンシブ調整 */
-    .choice-button {
-        padding: 8px 15px;
-        font-size: 1em;
-        width: 100%; /* 親コンテナの幅いっぱいに広がる */
-    }
-    /* 各ボタンラッパーのレスポンシブ調整 */
-    .action-section-title,
-    .ship-section-title,
-    .action-buttons-wrapper,
-    .ship-buttons-wrapper,
-    .departure-buttons-wrapper {
-        width: 90%; /* モバイルでは幅を広げる */
-        max-width: 280px; /* 最大幅を調整 */
-    }
+  /* 選択肢ボタンのレスポンシブ調整 */
+  .choice-button {
+    padding: 8px 15px;
+    font-size: 1em;
+    width: 100%; /* 親コンテナの幅いっぱいに広がる */
+  }
+  /* 各ボタンラッパーのレスポンシブ調整 */
+  .action-section-title,
+  .ship-section-title,
+  .action-buttons-wrapper,
+  .ship-buttons-wrapper,
+  .departure-buttons-wrapper {
+    width: 90%; /* モバイルでは幅を広げる */
+    max-width: 280px; /* 最大幅を調整 */
+  }
 }
 
 @media (max-width: 480px) {
-    body {
-        grid-template-columns: 1fr; /* 1列のみ */
-        grid-template-rows: auto auto auto; /* 左UI, メインコンテンツ, ログを縦に積み重ねる */
-        padding: 10px; /* 全体のパディングを調整 */
-        gap: 10px; /* グリッドアイテム間の隙間を調整 */
-        height: auto; /* 高さを自動調整 */
-        overflow-y: auto; /* 縦スクロールを許可 */
-    }
-    .left-ui-container,
-    .main-content-area,
-    .message-area { /* message-areaに直接適用 */
-        grid-column: 1; /* 1列目に配置 */
-        width: 90%; /* 画面幅の90% */
-        max-width: 300px; /* 最大幅を設定 */
-        margin: 0 auto; /* 中央寄せ */
-        height: auto; /* 高さを自動調整 */
-    }
-    .main-content-area {
-        grid-row: 2; /* メインコンテンツは2行目 */
-    }
-    .message-area {
-        grid-row: 3; /* メッセージエリアは3行目 */
-        height: 210px; /* モバイルでのログの高さ */
-        padding: 8px; /* パディングを調整 */
-    }
-    /* .shortcut-button のスタイルは削除されたため、ここも削除 */
-    /* .shortcut-list-area のスタイルは削除されたため、ここも削除 */
+  body {
+    grid-template-columns: 1fr; /* 1列のみ */
+    grid-template-rows: auto auto auto; /* 左UI, メインコンテンツ, ログを縦に積み重ねる */
+    padding: 10px; /* 全体のパディングを調整 */
+    gap: 10px; /* グリッドアイテム間の隙間を調整 */
+    height: auto; /* 高さを自動調整 */
+    overflow-y: auto; /* 縦スクロールを許可 */
+  }
+  .left-ui-container,
+  .main-content-area,
+  .message-area {
+    /* message-areaに直接適用 */
+    grid-column: 1; /* 1列目に配置 */
+    width: 90%; /* 画面幅の90% */
+    max-width: 300px; /* 最大幅を設定 */
+    margin: 0 auto; /* 中央寄せ */
+    height: auto; /* 高さを自動調整 */
+  }
+  .main-content-area {
+    grid-row: 2; /* メインコンテンツは2行目 */
+  }
+  .message-area {
+    grid-row: 3; /* メッセージエリアは3行目 */
+    height: 210px; /* モバイルでのログの高さ */
+    padding: 8px; /* パディングを調整 */
+  }
+  /* 各エリアのパディング、ボーダー、フォントサイズを調整 */
+  .airship-display-area {
+    border-width: 3px;
+    border-radius: 10px;
+  }
+  /* ドット絵風バッグアイコンのコンテナのレスポンシブ調整 */
+  .bag-icon-container {
+    width: 32px;
+    height: 32px;
+    bottom: 5px;
+    right: 5px;
+  }
+  .airship-container {
+    width: 150px; /* 飛行船のサイズも調整 */
+    height: 112.5px;
+  }
+  .game-info-area {
+    padding: 8px;
+    border-width: 2px;
+    border-radius: 8px;
+    font-size: 1em;
+    gap: 6px;
+  }
+  .health-bar-container,
+  .fuel-bar-container {
+    /* 燃料ゲージにも同じスタイルを適用 */
+    height: 16px;
+  }
+  .weather-icon-container {
+    width: 20px;
+    height: 20px;
+    margin-left: 5px;
+  }
+  .health-value-overlay,
+  .fuel-value-overlay {
+    /* 燃料ゲージの数値表示にも同じスタイルを適用 */
+    font-size: 0.7em;
+  }
+  .message-area-title {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+  }
+  .message-log {
+    padding-right: 8px;
+  }
 
-    /* 各エリアのパディング、ボーダー、フォントサイズを調整 */
-    .airship-display-area {
-        border-width: 3px;
-        border-radius: 10px;
-    }
-    /* ドット絵風バッグアイコンのコンテナのレスポンシブ調整 */
-    .bag-icon-container {
-        width: 32px;
-        height: 32px;
-        bottom: 5px;
-        right: 5px;
-    }
-    .airship-container {
-        width: 150px; /* 飛行船のサイズも調整 */
-        height: 112.5px;
-    }
-    .game-info-area {
-        padding: 8px;
-        border-width: 2px;
-        border-radius: 8px;
-        font-size: 1em;
-        gap: 6px;
-    }
-    .health-bar-container,
-    .fuel-bar-container { /* 燃料ゲージにも同じスタイルを適用 */
-        height: 16px;
-    }
-    .weather-icon-container {
-        width: 20px;
-        height: 20px;
-        margin-left: 5px;
-    }
-    .health-value-overlay,
-    .fuel-value-overlay { /* 燃料ゲージの数値表示にも同じスタイルを適用 */
-        font-size: 0.7em;
-    }
-    .message-area-title {
-        font-size: 1.1em;
-        margin-bottom: 8px;
-    }
-    .message-log {
-        padding-right: 8px;
-    }
+  /* メインコンテンツエリアのレスポンシブ調整 */
+  .main-content-title {
+    font-size: 1.2em;
+  }
 
-    /* メインコンテンツエリアのレスポンシブ調整 */
-    .main-content-title {
-        font-size: 1.2em;
-    }
+  /* モーダルコンテンツラッパーのレスポンシブ調整 */
+  .modal-content-wrapper {
+    flex-direction: column; /* 縦に並べる */
+    gap: 10px;
+    padding: 5px;
+  }
+  .inventory-container,
+  .item-list-area {
+    width: 90%; /* 縦並びの時に幅を広げる */
+    max-width: none; /* 以前の最大幅を解除 */
+    height: auto; /* 高さを自動調整 */
+  }
+  .inventory-grid {
+    grid-template-columns: repeat(4, 1fr); /* 常に4列を維持 */
+  }
+  .inventory-cell {
+    width: 35px;
+    height: 35px;
+  }
+  .inventory-grid {
+    gap: 4px;
+  }
+  /* アイテム一覧エリアのレスポンシブ調整 */
+  .item-list-area {
+    width: 90%; /* 縦並びの時に幅を広げる */
+    height: 200px; /* 高さを調整 */
+    padding: 8px;
+    border-width: 1px;
+    border-radius: 5px;
+    font-size: 0.8em;
+  }
+  .item-list-title {
+    font-size: 1em;
+    margin-bottom: 8px;
+  }
+  .available-items-list li {
+    padding: 4px;
+  }
 
-    /* モーダルコンテンツラッパーのレスポンシブ調整 */
-    .modal-content-wrapper {
-        flex-direction: column; /* 縦に並べる */
-        gap: 10px;
-        padding: 5px;
-    }
-    .inventory-container,
-    .item-list-area {
-        width: 90%; /* 縦並びの時に幅を広げる */
-        max-width: none; /* 以前の最大幅を解除 */
-        height: auto; /* 高さを自動調整 */
-    }
-    .inventory-grid {
-        grid-template-columns: repeat(4, 1fr); /* 列数を減らす */
-    }
-    .inventory-cell {
-        width: 35px;
-        height: 35px;
-    }
-    .inventory-grid {
-        gap: 4px;
-    }
-    /* アイテム一覧エリアのレスポンシブ調整 */
-    .item-list-area {
-        width: 90%; /* 縦並びの時に幅を広げる */
-        height: 200px; /* 高さを調整 */
-        padding: 8px;
-        border-width: 1px;
-        border-radius: 5px;
-        font-size: 0.8em;
-    }
-    .item-list-title {
-        font-size: 1em;
-        margin-bottom: 8px;
-    }
-    .available-items-list li {
-        padding: 4px;
-    }
-
-    /* 選択肢ボタンのレスポンシブ調整 */
-    .choice-button {
-        padding: 6px 10px;
-        font-size: 0.9em;
-    }
-    /* 各ボタンラッパーのレスポンシブ調整 */
-    .action-section-title,
-    .ship-section-title,
-    .action-buttons-wrapper,
-    .ship-buttons-wrapper,
-    .departure-buttons-wrapper {
-        width: 95%; /* モバイルでは幅を広げる */
-        max-width: 280px; /* 最大幅を調整 */
-    }
+  /* 選択肢ボタンのレスポンシブ調整 */
+  .choice-button {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+  /* 各ボタンラッパーのレスポンシブ調整 */
+  .action-section-title,
+  .ship-section-title,
+  .action-buttons-wrapper,
+  .ship-buttons-wrapper,
+  .departure-buttons-wrapper {
+    width: 95%; /* モバイルでは幅を広げる */
+    max-width: 280px; /* 最大幅を調整 */
+  }
 }
