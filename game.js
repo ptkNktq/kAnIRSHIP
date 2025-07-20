@@ -19,6 +19,7 @@ let itemListTitle; // グローバルで宣言
 let infoModalContentWrapper;
 let infoModalTitle;
 let infoModalText;
+let infoModalPrices; // 新しく追加：価格表示用の要素
 let gameTimeDisplay;
 let weatherDisplay;
 let weatherIconContainer;
@@ -217,8 +218,18 @@ function toggleModal(modalType, moduleInfo = null) {
     if (modalOverlay) modalOverlay.style.display = "block";
     if (infoModalContentWrapper)
       infoModalContentWrapper.classList.add("is-open");
+
+    // 街の説明文を設定
     if (infoModalTitle) infoModalTitle.textContent = moduleInfo.getTitle();
     if (infoModalText) infoModalText.textContent = moduleInfo.getInfo();
+
+    // 価格情報を設定 (getPricesInfo関数が存在する場合のみ)
+    if (infoModalPrices && typeof moduleInfo.getPricesInfo === "function") {
+      infoModalPrices.textContent = moduleInfo.getPricesInfo();
+      infoModalPrices.style.display = "block"; // 表示を有効にする
+    } else if (infoModalPrices) {
+      infoModalPrices.style.display = "none"; // 価格情報がない場合は非表示にする
+    }
   }
   // modalType === null の場合は、既に上で全てのモーダルを閉じる処理が行われているため、追加の処理は不要
 }
@@ -238,6 +249,7 @@ window.onload = () => {
   infoModalContentWrapper = document.getElementById("infoModalContentWrapper");
   infoModalTitle = document.getElementById("infoModalTitle");
   infoModalText = document.getElementById("infoModalText");
+  infoModalPrices = document.getElementById("infoModalPrices"); // 新しく取得
   gameTimeDisplay = document.getElementById("gameTimeDisplay");
   weatherDisplay = document.getElementById("weatherDisplay");
   weatherIconContainer = document.querySelector(".weather-icon-container");
@@ -271,6 +283,24 @@ window.onload = () => {
     },
     displayMessage
   );
+
+  // ゲーム開始メッセージを最初に表示
+  displayMessage("ゲームが開始されました！");
+
+  // weatherIconsの初期化後にsetRandomWeatherを呼び出す
+  setRandomWeather(); // 天候を設定
+
+  updateHealthDisplay(); // 体力表示を更新
+  updateFuelDisplay(); // 燃料表示を更新
+  updateMoneyDisplay(); // お金表示を更新
+  updateGameTimeDisplay(); // 新しく追加: ゲーム時間表示を更新
+
+  // 初回起動時の「小さな街」の価格を固定で設定する
+  // calculatePricesForVisitに1.0を渡すことで、ランダムではなくベース価格が設定される
+  SmallTown.calculatePricesForVisit(1.0);
+
+  updateShipStateDisplay(); // 船の状態表示を更新（メインコンテンツも更新される）
+  console.log("ゲームがロードされました！");
 
   // キーが押された時のイベントリスナーを設定
   document.addEventListener("keydown", (event) => {
@@ -323,17 +353,6 @@ window.onload = () => {
       }
     }
   });
-
-  // ゲーム開始メッセージを最初に表示
-  displayMessage("ゲームが開始されました！");
-
-  setRandomWeather(); // 天候を設定
-  updateHealthDisplay(); // 体力表示を更新
-  updateFuelDisplay(); // 燃料表示を更新
-  updateMoneyDisplay(); // お金表示を更新
-  updateGameTimeDisplay(); // 新しく追加: ゲーム時間表示を更新
-  updateShipStateDisplay(); // 船の状態表示を更新（メインコンテンツも更新される）
-  console.log("ゲームがロードされました！");
 };
 
 /**
@@ -341,7 +360,7 @@ window.onload = () => {
  * @param {number} durationMinutes - 探索にかかるゲーム分数
  */
 function startIslandExploration(durationMinutes) {
-  displayMessage("無人島を探索しています...");
+  displayMessage(`無人島を探索しています... (${durationMinutes}分)`); // メッセージに時間を追加したわ！
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -393,7 +412,7 @@ function startIslandExploration(durationMinutes) {
         }
       } else {
         // 残りの60%は何もなし (0.4 - 1.0)
-        displayMessage("何も見つかりませんでした...");
+        displayMessage("特に何もありませんでした。"); // メッセージを修正
       }
 
       gameContext.enableAllButtons(); // ボタンを有効に戻す
@@ -419,7 +438,9 @@ function startAirshipExploration(
     return;
   }
 
-  displayMessage("飛行船での探索を開始しました。");
+  displayMessage(
+    `飛行船での探索を開始しました。(${durationMinutes}分間の航行)`
+  ); // メッセージに時間を追加したわ！
   currentFuel -= initialFuelCost; // 初期燃料を消費
   updateFuelDisplay();
 
@@ -469,7 +490,9 @@ function startAirshipExploration(
  * @param {number} durationMinutes - 散策にかかるゲーム分数
  */
 function startStrollExploration(durationMinutes) {
-  displayMessage("街を散策しています。何か新しい発見があるかもしれません...");
+  displayMessage(
+    `街を散策しています。何か新しい発見があるかもしれません... (${durationMinutes}分)`
+  ); // メッセージに時間を追加したわ！
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -554,9 +577,32 @@ const gameContext = {
   },
   set currentLocation(value) {
     currentLocation = value;
-    updateMainContent();
-  }, // 場所が変わったらメインコンテンツを更新
-  // InventoryManagerからインベントリデータを取得
+    updateMainContent(); // 場所が変わったらメインコンテンツを更新
+
+    // 新しい場所が街または島の場合、船の状態を「離船中」に設定
+    if (
+      currentLocation === "小さな街" ||
+      currentLocation === "大きな街" ||
+      currentLocation === "無人島"
+    ) {
+      gameContext.shipState = "離船中"; // ここで船の状態を「離船中」に設定
+    }
+
+    // 街のモジュールにcalculatePricesForVisit関数があれば呼び出す
+    let currentModule;
+    if (currentLocation === "小さな街") {
+      currentModule = SmallTown;
+    } else if (currentLocation === "大きな街") {
+      currentModule = LargeTown;
+    }
+
+    if (
+      currentModule &&
+      typeof currentModule.calculatePricesForVisit === "function"
+    ) {
+      currentModule.calculatePricesForVisit(); // 引数なしで呼び出し、ランダムな倍率を適用
+    }
+  },
   get bagInventory() {
     return InventoryManager.inventoryData.bagInventory;
   },
@@ -651,13 +697,22 @@ function updateMainContent() {
   // 行動セクションを動的に生成
   const actions = currentModule.getActions();
   actions.forEach((section) => {
-    const sectionTitle = document.createElement("h4");
-    sectionTitle.textContent = section.subtitle;
-    sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
-    const buttonsWrapper = document.createElement("div");
-    buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
+    // サブタイトルがnullでない場合のみh4要素を作成
+    if (section.subtitle !== null) {
+      const sectionTitle = document.createElement("h4");
+      sectionTitle.textContent = section.subtitle;
+      sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
+      choicesContainer.appendChild(sectionTitle);
+    }
 
-    choicesContainer.appendChild(sectionTitle);
+    const buttonsWrapper = document.createElement("div");
+    // サブタイトルがnullの場合は、特殊なクラスを追加してスタイル調整できるようにする
+    if (section.subtitle === null) {
+      buttonsWrapper.classList.add("no-subtitle-buttons-wrapper");
+    } else {
+      buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
+    }
+
     choicesContainer.appendChild(buttonsWrapper);
 
     section.buttons.forEach((buttonInfo) => {

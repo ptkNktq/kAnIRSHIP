@@ -79,8 +79,21 @@ body {
 .info-modal-text {
   font-size: 1.1em;
   line-height: 1.6;
-  margin-bottom: 0;
+  margin-bottom: 15px; /* 価格情報との間にマージンを追加 */
   text-align: left; /* ここを左揃えに設定 */
+}
+
+/* 新しく追加：情報モーダル内の価格表示のスタイル */
+.info-modal-prices {
+  font-size: 1em;
+  line-height: 1.5;
+  text-align: left;
+  color: #99ccff; /* 少し明るい色に */
+  background-color: rgba(0, 0, 0, 0.2); /* 背景を少し暗くして区別 */
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px; /* 説明文との間に少しスペース */
+  white-space: pre-wrap; /* 改行を有効にする */
 }
 
 /* インベントリコンテナのスタイル */
@@ -537,9 +550,7 @@ body {
 
 /* 各ボタンラッパーの基本スタイル */
 .action-buttons-wrapper,
-.ship-buttons-wrapper,
-.departure-buttons-wrapper {
-  /* 新しい出航系ボタンラッパー */
+.ship-buttons-wrapper {
   display: flex;
   flex-direction: column; /* ボタンを縦に並べる */
   gap: 10px; /* ボタン間の隙間 */
@@ -549,10 +560,20 @@ body {
   align-items: center; /* 中央揃え */
 }
 
-/* 出航系ボタンラッパーの横線スタイル */
-.departure-buttons-wrapper {
+/* 出航系ボタンラッパーとサブタイトルなしのボタンラッパーの横線スタイル */
+.departure-buttons-wrapper,
+.no-subtitle-buttons-wrapper {
+  /* ここにno-subtitle-buttons-wrapperを追加したわ！ */
   padding-top: 15px; /* 上部に余白 */
   border-top: 1px solid rgba(0, 0, 0, 0.1); /* 上部に区切り線 */
+  /* 基本スタイルを継承するために、上記の.action-buttons-wrapperと同じプロパティを再定義 */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+  width: 80%;
+  max-width: 300px;
+  align-items: center;
 }
 
 /* 選択肢ボタンの基本スタイル */
@@ -737,7 +758,9 @@ body {
   .ship-section-title,
   .action-buttons-wrapper,
   .ship-buttons-wrapper,
-  .departure-buttons-wrapper {
+  .departure-buttons-wrapper,
+  .no-subtitle-buttons-wrapper {
+    /* ここにもno-subtitle-buttons-wrapperを追加 */
     width: 90%; /* モバイルでは幅を広げる */
     max-width: 280px; /* 最大幅を調整 */
   }
@@ -834,7 +857,9 @@ body {
   .ship-section-title,
   .action-buttons-wrapper,
   .ship-buttons-wrapper,
-  .departure-buttons-wrapper {
+  .departure-buttons-wrapper,
+  .no-subtitle-buttons-wrapper {
+    /* ここにもno-subtitle-buttons-wrapperを追加 */
     width: 95%; /* モバイルでは幅を広げる */
     max-width: 280px; /* 最大幅を調整 */
   }

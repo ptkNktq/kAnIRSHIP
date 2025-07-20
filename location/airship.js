@@ -55,7 +55,7 @@ export function executeAction(actionName, gameContext) {
       gameContext.startAirshipExploration(60, 0.1, 5); // 60分探索、10分で1燃料消費、初期燃料消費5
       break;
     case "anchor":
-      gameContext.displayMessage("飛行船を停泊させました。");
+      gameContext.displayMessage("飛行船を停泊させました。(30分経過)"); // メッセージに時間を追加したわ！
       gameContext.shipState = "離船中"; // ここを「離船中」に変更
       gameContext.currentLocation = gameContext.getRandomTownType(); // ランダムな街に到着
       gameContext.advanceGameTime(30); // 30分進める
