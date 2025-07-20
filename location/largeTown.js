@@ -20,6 +20,14 @@ export function getMessage() {
 }
 
 /**
+ * 大きな街の情報を返す
+ * @returns {string}
+ */
+export function getInfo() {
+  return "この大きな街は、商業と技術の中心地です。多くの店や施設があり、飛行船の改造も可能です。";
+}
+
+/**
  * 大きな街での行動リストを返す
  * @returns {Array<Object>}
  */

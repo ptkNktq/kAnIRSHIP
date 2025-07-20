@@ -48,6 +48,41 @@ body {
   padding: 10px; /* ラッパー自体のパディング */
 }
 
+/* 情報モーダルに特化したスタイル */
+.info-modal {
+  flex-direction: column; /* 縦並び */
+  justify-content: center;
+  background-color: rgba(44, 62, 80, 0.95); /* 半透明の暗い背景 */
+  border: 2px solid #34495e; /* ボーダー */
+  border-radius: 10px; /* 角を丸く */
+  padding: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* 影 */
+  max-width: 500px; /* インフォメーションモーダルの最大幅 */
+  width: 80%; /* 幅の調整 */
+  height: auto; /* 高さ自動調整 */
+}
+
+.info-modal-content {
+  text-align: center;
+  color: #ecf0f1;
+}
+
+.info-modal-title {
+  color: #f39c12; /* オレンジ色で強調 */
+  font-size: 1.5em;
+  margin-top: 0; /* ここを0に設定して上部の隙間をなくす */
+  margin-bottom: 15px;
+  border-bottom: 1px solid #505050;
+  padding-bottom: 5px;
+}
+
+.info-modal-text {
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin-bottom: 0;
+  text-align: left; /* ここを左揃えに設定 */
+}
+
 /* インベントリコンテナのスタイル */
 .inventory-container {
   background-color: rgba(44, 62, 80, 0.95); /* 半透明の暗い背景 */
@@ -135,9 +170,15 @@ body {
 }
 
 /* 飛行船コンテナのスタイル */
-.airship-container {
-  width: 200px;
-  height: 150px;
+/* .airship-container { */
+/* width: 200px; */
+/* height: 150px; */
+/* } */
+
+.airship-svg {
+  width: 70%; /* コンテナ内で小さめに表示 */
+  height: 70%; /* コンテナ内で小さめに表示 */
+  display: block;
 }
 
 /* ドット絵風バッグアイコンのコンテナ */
@@ -419,6 +460,51 @@ body {
   font-size: 1.5em;
   border-bottom: 2px solid #00796b;
   padding-bottom: 5px;
+  display: flex; /* Flexboxを使ってタイトルとボタンを横並びにする */
+  align-items: center; /* 垂直方向の中央揃え */
+  justify-content: center; /* 水平方向の中央揃え */
+  gap: 10px; /* タイトルとボタンの間の隙間 */
+}
+
+/* 情報ボタンのスタイル */
+.info-button {
+  background: none; /* 背景なし */
+  border: none; /* ボーダーなし */
+  padding: 0; /* パディングなし */
+  cursor: pointer; /* カーソルをポインターに */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; /* ボタンの幅を少し大きく */
+  height: 28px; /* ボタンの高さを少し大きく */
+  border-radius: 50%; /* 丸い形 */
+  transition: background-color 0.2s ease;
+  flex-shrink: 0; /* 縮小しない */
+  color: #00796b; /* アイコンの色をボタンのテキスト色に合わせる */
+  font-weight: bold; /* テキストを太字に */
+  font-size: 1.2em; /* アイコンのサイズを調整 */
+  line-height: 1; /* 行の高さを調整して中央に配置 */
+  text-align: center; /* テキストを中央に配置 */
+  /* box-shadow: 0 2px 4px rgba(0,0,0,0.2); */ /* ここをコメントアウトして影を削除 */
+  background-color: rgba(0, 121, 107, 0.1); /* 薄い背景色 */
+}
+
+.info-button:hover {
+  background-color: rgba(0, 121, 107, 0.2); /* ホバー時の背景色 */
+  /* box-shadow: 0 4px 8px rgba(0,0,0,0.3); */ /* ここをコメントアウトして影を削除 */
+}
+
+.info-button:active {
+  background-color: rgba(0, 121, 107, 0.3); /* クリック時の背景色 */
+  /* box-shadow: 0 1px 2px rgba(0,0,0,0.1); */ /* ここをコメントアウトして影を削除 */
+  transform: translateY(1px); /* 少し押し込む */
+}
+
+.info-icon {
+  width: 22px; /* アイコンの幅を調整 */
+  height: 22px; /* アイコンの高さを調整 */
+  stroke: currentColor; /* 親要素のcolorを継承 */
+  stroke-width: 2;
 }
 
 .main-content-area p {
@@ -575,10 +661,10 @@ body {
     border-radius: 12px;
   }
   /* 飛行船コンテナのレスポンシブ調整 */
-  .airship-container {
-    width: 150px;
-    height: 112.5px;
-  }
+  /* .airship-container { */
+  /* width: 150px; */
+  /* height: 112.5px; */
+  /* } */
   /* ドット絵風バッグアイコンのコンテナのレスポンシブ調整 */
   .bag-icon-container {
     width: 40px;
@@ -696,10 +782,10 @@ body {
     bottom: 5px;
     right: 5px;
   }
-  .airship-container {
-    width: 150px; /* 飛行船のサイズも調整 */
-    height: 112.5px;
-  }
+  /* .airship-container { */
+  /* width: 150px; */
+  /* height: 112.5px; */
+  /* } */
   .game-info-area {
     padding: 8px;
     border-width: 2px;
@@ -722,42 +808,6 @@ body {
     /* 燃料ゲージの数値表示にも同じスタイルを適用 */
     font-size: 0.7em;
   }
-  .message-area-title {
-    font-size: 1.1em;
-    margin-bottom: 8px;
-  }
-  .message-log {
-    padding-right: 8px;
-  }
-
-  /* メインコンテンツエリアのレスポンシブ調整 */
-  .main-content-title {
-    font-size: 1.2em;
-  }
-
-  /* モーダルコンテンツラッパーのレスポンシブ調整 */
-  .modal-content-wrapper {
-    flex-direction: column; /* 縦に並べる */
-    gap: 10px;
-    padding: 5px;
-  }
-  .inventory-container,
-  .item-list-area {
-    width: 90%; /* 縦並びの時に幅を広げる */
-    max-width: none; /* 以前の最大幅を解除 */
-    height: auto; /* 高さを自動調整 */
-  }
-  .inventory-grid {
-    grid-template-columns: repeat(4, 1fr); /* 常に4列を維持 */
-  }
-  .inventory-cell {
-    width: 35px;
-    height: 35px;
-  }
-  .inventory-grid {
-    gap: 4px;
-  }
-  /* アイテム一覧エリアのレスポンシブ調整 */
   .item-list-area {
     width: 90%; /* 縦並びの時に幅を広げる */
     height: 200px; /* 高さを調整 */

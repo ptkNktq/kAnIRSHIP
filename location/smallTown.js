@@ -20,6 +20,14 @@ export function getMessage() {
 }
 
 /**
+ * 小さな街の情報を返す
+ * @returns {string}
+ */
+export function getInfo() {
+  return "この小さな街は、静かで穏やかな場所です。主要な産業はありませんが、旅人にとっては良い休憩所となるでしょう。";
+}
+
+/**
  * 小さな街での行動リストを返す
  * @returns {Array<Object>}
  */

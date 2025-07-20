@@ -1,45 +1,232 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>起動画面</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            font-family: sans-serif;
-        }
-        .start-button {
-            padding: 20px 40px;
-            font-size: 2em;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 5px #388E3C;
-            transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
-        }
-        .start-button:active {
-            background-color: #367C39;
-            transform: translateY(3px);
-            box-shadow: 0 2px #388E3C;
-        }
-    </style>
-</head>
-<body>
-    <button class="start-button" id="startButton">ゲームスタート</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>飛行船アドベンチャー</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="left-ui-container">
+      <div class="airship-display-area">
+        <!-- 飛行船のSVGをここに配置 -->
+        <svg
+          class="airship-svg"
+          viewBox="0 0 50 40"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <!-- バルーン部分 (少し細長くて、両端が丸い形状) -->
+          <rect x="5" y="5" width="38" height="12" fill="#808080" />
+          <rect x="3" y="6" width="2" height="10" fill="#808080" />
+          <rect x="43" y="6" width="2" height="10" fill="#808080" />
+          <rect x="4" y="7" width="1" height="8" fill="#808080" />
+          <rect x="44" y="7" width="1" height="8" fill="#808080" />
+          <!-- 船体部分 (より大きく、複雑な形状の船) -->
+          <rect x="10" y="20" width="30" height="6" fill="#A0522D" />
+          <rect x="9" y="21" width="32" height="4" fill="#8B4513" />
+          <rect x="8" y="22" width="34" height="2" fill="#8B4513" />
+          <rect x="11" y="19" width="28" height="1" fill="#A0522D" />
+          <!-- 船首 (前方、右側) -->
+          <rect x="40" y="19" width="3" height="2" fill="#A0522D" />
+          <rect x="43" y="18" width="2" height="1" fill="#A0522D" />
+          <!-- 船尾 (後方、左側) -->
+          <rect x="7" y="19" width="3" height="2" fill="#A0522D" />
+          <rect x="5" y="18" width="2" height="1" fill="#A0522D" />
+          <!-- 側面構造 (船体のディテール) -->
+          <rect x="12" y="26" width="2" height="2" fill="#696969" />
+          <rect x="18" y="26" width="2" height="2" fill="#696969" />
+          <rect x="24" y="26" width="2" height="2" fill="#696969" />
+          <rect x="30" y="26" width="2" height="2" fill="#696969" />
+          <rect x="36" y="26" width="2" height="2" fill="#696969" />
+          <!-- 紐 (バルーンと船体を繋ぐ) -->
+          <rect x="15" y="17" width="1" height="3" fill="#556B2F" />
+          <rect x="25" y="17" width="1" height="3" fill="#556B2F" />
+          <rect x="35" y="17" width="1" height="3" fill="#556B2F" />
+          <!-- 舵輪 (船尾近く、船体の上) -->
+          <rect x="8" y="17" width="1" height="2" fill="#5C4033" />
+          <rect x="7" y="18" width="2" height="1" fill="#5C4033" />
+          <!-- 船首の棒 (前方) -->
+          <rect x="45" y="19" width="3" height="1" fill="#5C4033" />
+          <rect x="48" y="18" width="1" height="1" fill="#5C4033" />
+        </svg>
+        <div class="bag-icon-container" id="bagIcon">
+          <svg
+            class="bag-icon-svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </div>
+      </div>
 
-    <script>
-        document.getElementById('startButton').addEventListener('click', function() {
-            // 遅延なしでgame.htmlに遷移
-            window.location.href = 'game.html';
-        });
-    </script>
-</body>
+      <div class="game-info-area">
+        <div class="game-info-item">
+          <span class="game-info-label">時間:</span>
+          <span id="gameTimeDisplay">Day 1 08:00</span>
+        </div>
+        <div class="game-info-item">
+          <span class="game-info-label">天候:</span>
+          <span id="weatherDisplay">晴れ</span>
+          <div class="weather-icon-container">
+            <svg
+              id="icon-sunny"
+              class="weather-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg
+              id="icon-cloudy"
+              class="weather-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+            </svg>
+            <svg
+              id="icon-rainy"
+              class="weather-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 17v6"></path>
+              <path d="M12 12v6"></path>
+              <path d="M16 16l-4-4-4 4"></path>
+              <path d="M20 16l-4-4-4 4"></path>
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+            </svg>
+            <svg
+              id="icon-stormy"
+              class="weather-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M14 11a4 4 0 0 0-8 0"></path>
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+              <path d="M13 16l-3 5h4l-3 5"></path>
+            </svg>
+            <svg
+              id="icon-snowy"
+              class="weather-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+              <line x1="12" y1="17" x2="12" y2="17.01"></line>
+              <line x1="12" y1="21" x2="12" y2="21.01"></line>
+              <line x1="16" y1="19" x2="16" y2="19.01"></line>
+              <line x1="8" y1="19" x2="8" y2="19.01"></line>
+              <line x1="14" y1="15" x2="14" y2="15.01"></line>
+              <line x1="10" y1="15" x2="10" y2="15.01"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="game-info-item">
+          <span class="game-info-label">体力:</span>
+          <div class="health-bar-container">
+            <div id="healthBar" class="health-bar"></div>
+            <span id="healthValue" class="health-value-overlay"></span>
+          </div>
+        </div>
+        <div class="game-info-item">
+          <span class="game-info-label">燃料:</span>
+          <div class="fuel-bar-container">
+            <div id="fuelBar" class="fuel-bar"></div>
+            <span id="fuelValue" class="fuel-value-overlay"></span>
+          </div>
+        </div>
+        <div class="game-info-item">
+          <span class="game-info-label">所持金:</span>
+          <span id="moneyDisplay">100,000 バルク</span>
+        </div>
+        <div class="game-info-item">
+          <span class="game-info-label">船の状態:</span>
+          <span id="shipStateDisplay">停泊中</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content-area">
+      <h2 class="main-content-title" id="mainContentTitle"></h2>
+      <div id="mainContentText"></div>
+      <div id="choicesContainer" class="choices-container"></div>
+    </div>
+
+    <div class="message-area">
+      <h3 class="message-area-title">ログ</h3>
+      <div id="messageLog" class="message-log"></div>
+    </div>
+
+    <!-- モーダルオーバーレイ (インベントリと情報モーダルで共有) -->
+    <div id="modalOverlay" class="modal-overlay">
+      <!-- インベントリモーダル -->
+      <div id="inventoryModalContentWrapper" class="modal-content-wrapper">
+        <div class="item-list-area">
+          <h4 class="item-list-title">カバン</h4>
+          <ul id="availableItemsList" class="available-items-list">
+            <!-- JSでアイテムがここに追加される -->
+          </ul>
+        </div>
+        <div id="inventoryContainer" class="inventory-container">
+          <h4 class="inventory-title">船体コンテナ</h4>
+          <div id="inventoryGrid" class="inventory-grid">
+            <!-- JSでインベントリセルがここに追加される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 情報モーダル -->
+      <div
+        id="infoModalContentWrapper"
+        class="modal-content-wrapper info-modal"
+      >
+        <div class="info-modal-content">
+          <h4 id="infoModalTitle" class="info-modal-title"></h4>
+          <p id="infoModalText" class="info-modal-text"></p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="game.js"></script>
+  </body>
 </html>
