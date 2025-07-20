@@ -273,16 +273,19 @@ window.onload = () => {
   mainContentTitle = document.getElementById("mainContentTitle");
 
   // InventoryManagerを初期化し、必要なDOM要素とコールバックを渡す
+  // 引数に初期で使えるカバンのスロット数と、表示するグリッドの総行数・列数を追加したわ！
   InventoryManager.initInventory(
     {
       inventoryGrid,
       availableItemsList,
       itemListTitle,
       inventoryModalContentWrapper,
-      // modalOverlayはInventoryManagerでは直接操作しないので渡さない
     },
-    displayMessage
-  );
+    displayMessage,
+    16,
+    7,
+    7
+  ); // 4x4=16スロットが初期で使える、表示は7x7グリッド
 
   // ゲーム開始メッセージを最初に表示
   displayMessage("ゲームが開始されました！");

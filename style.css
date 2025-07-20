@@ -130,7 +130,7 @@ body {
 /* インベントリグリッドのスタイル */
 .inventory-grid {
   display: grid; /* グリッドレイアウトを使用 */
-  grid-template-columns: repeat(4, 1fr); /* 常に4列のグリッド */
+  /* grid-template-columns は JS で動的に設定される */
   gap: 10px; /* セル間の隙間 */
   width: 100%; /* 親要素に合わせて幅を調整 */
   height: 100%; /* 親要素に合わせて高さを調整 */
@@ -150,6 +150,19 @@ body {
   font-size: 0.8em;
   cursor: pointer; /* カーソルをポインターに */
   transition: background-color 0.1s; /* ホバー時のアニメーション */
+}
+
+/* 使えないスロットのスタイル */
+.inventory-cell.unusable-cell {
+  background-color: #1a242f; /* より暗い背景色 */
+  border: 1px dashed #555555; /* 点線ボーダー */
+  cursor: not-allowed; /* 禁止カーソル */
+  opacity: 0.7; /* 少し透明にする */
+  color: #777777; /* 文字色を薄く */
+}
+
+.inventory-cell.unusable-cell:hover {
+  background-color: #1a242f; /* ホバーしても色が変わらないように */
 }
 
 /* 左側のUI要素をまとめるコンテナ */
