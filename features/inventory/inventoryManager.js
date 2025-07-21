@@ -57,24 +57,24 @@ export function initInventory(
   // item.jsからインポートしたアイテム定義をセット
   inventoryData.allItemDefinitions = allItemDefinitions;
 
-  // 初期アイテムを追加
+  // 初期アイテムを追加（メッセージ表示を抑制）
   const fuelTankDef = inventoryData.allItemDefinitions.find(
     (item) => item.id === "fuel_tank"
   );
   if (fuelTankDef) {
-    addItemToBag(fuelTankDef, 2);
+    addItemToBag(fuelTankDef, 2, true); // suppressMessageをtrueに固定
   }
   const repairKitDef = inventoryData.allItemDefinitions.find(
     (item) => item.id === "repair_kit"
   );
   if (repairKitDef) {
-    addItemToBag(repairKitDef, 2);
+    addItemToBag(repairKitDef, 2, true); // suppressMessageをtrueに固定
   }
   const mapDef = inventoryData.allItemDefinitions.find(
     (item) => item.id === "map"
   );
   if (mapDef) {
-    addItemToBag(mapDef, 1);
+    addItemToBag(mapDef, 1, true); // suppressMessageをtrueに固定
   }
 
   // 初期アイテム追加後にインベントリの描画を行う
@@ -82,7 +82,6 @@ export function initInventory(
   renderAvailableItems();
 
   // ドロップターゲットイベントリスナーを設定
-  // グリッド全体へのイベントリスナーは、セルにドロップされなかった場合のフォールバックとして残す
   _inventoryGridElement.addEventListener("dragover", handleDragOver);
   _inventoryGridElement.addEventListener("dragleave", handleDragLeave);
   _inventoryGridElement.addEventListener("drop", handleDrop);
@@ -123,9 +122,10 @@ export function isInventoryOpen() {
  * カバンにアイテムを追加する
  * @param {Object} itemDef - アイテム定義
  * @param {number} quantity - 数量
+ * @param {boolean} [suppressMessage=false] - メッセージ表示を抑制するかどうか
  * @returns {boolean} - 追加に成功したかどうか
  */
-export function addItemToBag(itemDef, quantity) {
+export function addItemToBag(itemDef, quantity, suppressMessage = false) {
   // 既存のアイテムを更新
   const existingItem = inventoryData.bagInventory.find(
     (item) => item && item.id === itemDef.id
@@ -134,14 +134,20 @@ export function addItemToBag(itemDef, quantity) {
     // スタック制限を超えないかチェック
     if (existingItem.quantity + quantity <= itemDef.stackLimit) {
       existingItem.quantity += quantity;
-      _displayMessageCallback(
-        `${itemDef.name}を${quantity}個手に入れた！(合計: ${existingItem.quantity})`
-      );
+      if (!suppressMessage) {
+        // メッセージ抑制がtrueでない場合のみ表示
+        _displayMessageCallback(
+          `${itemDef.name}を${quantity}個手に入れた！(合計: ${existingItem.quantity})`
+        );
+      }
       return true;
     } else {
-      _displayMessageCallback(
-        `${itemDef.name}のスタック制限を超えてしまう！(最大: ${itemDef.stackLimit})`
-      );
+      if (!suppressMessage) {
+        // メッセージ抑制がtrueでない場合のみ表示
+        _displayMessageCallback(
+          `${itemDef.name}のスタック制限を超えてしまう！(最大: ${itemDef.stackLimit})`
+        );
+      }
       return false;
     }
   }
@@ -163,10 +169,18 @@ export function addItemToBag(itemDef, quantity) {
       ...itemDef,
       quantity: quantity,
     };
-    _displayMessageCallback(`${itemDef.name}を${quantity}個手に入れた！`);
+    if (!suppressMessage) {
+      // メッセージ抑制がtrueでない場合のみ表示
+      _displayMessageCallback(`${itemDef.name}を${quantity}個手に入れた！`);
+    }
     return true;
   } else {
-    _displayMessageCallback("カバンがいっぱいで、これ以上アイテムを持てない！");
+    if (!suppressMessage) {
+      // メッセージ抑制がtrueでない場合のみ表示
+      _displayMessageCallback(
+        "カバンがいっぱいで、これ以上アイテムを持てない！"
+      );
+    }
     return false;
   }
 }
@@ -278,9 +292,8 @@ export function removeItemFromBag(itemId, quantity) {
         `${inventoryData.bagInventory[itemIndex].name}を${quantity}個使った。`
       );
     } else {
-      const removedItemName = inventoryData.bagInventory[itemIndex].name;
+      // アイテムを使い切った場合、ログは表示しない
       inventoryData.bagInventory[itemIndex] = null; // nullを設定してスロットを空ける
-      _displayMessageCallback(`${removedItemName}を使い切った。`);
     }
     return true;
   }
@@ -849,7 +862,7 @@ function handleDrop(event) {
       const newStartRow = Math.floor(destinationIndex / _totalBagCols);
       const newStartCol = destinationIndex % _totalBagCols;
       for (let r = 0; r < sourceItemDef.size.height; r++) {
-        for (let c = 0; c < sourceItemDef.size.width; c++) {
+        for (let c = 0; c < itemDef.size.width; c++) {
           if (r === 0 && c === 0) continue; // 左上セルはスキップ
           const occupiedFlatIndex =
             (newStartRow + r) * _totalBagCols + (newStartCol + c);

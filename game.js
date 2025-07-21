@@ -232,9 +232,6 @@ window.onload = () => {
     weatherIconsSvg // SVGアイコンオブジェクトを渡す
   );
 
-  // WeatherManagerからweatherIconsの参照を取得
-  // weatherIcons = WeatherManager.getWeatherIcons(); // WeatherManagerで管理されるため、直接アクセスしない
-
   healthValueDisplay = document.getElementById("healthValue");
   healthBar = document.getElementById("healthBar");
   fuelValueDisplay = document.getElementById("fuelValue");
@@ -259,14 +256,15 @@ window.onload = () => {
     displayMessage,
     16,
     7,
-    7
+    7,
+    true // 初期化時のメッセージ表示を抑制
   ); // 4x4=16スロットが初期で使える、表示は7x7グリッド
 
-  // ゲーム開始メッセージを最初に表示
-  displayMessage("ゲームが開始されました！");
+  // ゲーム開始メッセージを最初に表示しない
+  // displayMessage("ゲームが開始されました！"); // この行を削除
 
-  // weatherIconsの初期化後にsetRandomWeatherを呼び出す
-  WeatherManager.setRandomWeather(displayMessage); // 天候を設定
+  // weatherIconsの初期化後にsetRandomWeatherを呼び出す（メッセージを抑制）
+  WeatherManager.setRandomWeather(displayMessage, true); // 天候を設定（メッセージ抑制）
 
   updateHealthDisplay(); // 体力表示を更新
   updateFuelDisplay(); // 燃料表示を更新

@@ -42,8 +42,9 @@ export function initWeather(elements, svgIcons) {
 /**
  * 天候をランダムに設定し、表示を更新する関数
  * @param {function} displayMessage - メッセージログに表示するためのコールバック関数
+ * @param {boolean} [suppressMessage=false] - メッセージ表示を抑制するかどうか
  */
-export function setRandomWeather(displayMessage) {
+export function setRandomWeather(displayMessage, suppressMessage = false) {
   const randomIndex = Math.floor(Math.random() * weatherPatterns.length);
   const selectedWeather = weatherPatterns[randomIndex];
 
@@ -62,5 +63,9 @@ export function setRandomWeather(displayMessage) {
     // 要素が存在するか確認
     weatherIcons[selectedWeather.iconId].style.display = "block";
   }
-  displayMessage(`天候が「${selectedWeather.name}」になりました。`); // メッセージログに表示
+
+  // suppressMessageがtrueでない場合のみメッセージを表示
+  if (!suppressMessage) {
+    displayMessage(`天候が「${selectedWeather.name}」になりました。`); // メッセージログに表示
+  }
 }

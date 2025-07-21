@@ -28,124 +28,7 @@ export const allItemDefinitions = [
   {
     id: "repair_kit",
     name: "修理キット",
-    description: "飛行船の損傷を修理する。",
-    type: "consumable",
-    size: { width: 1, height: 1 },
-    stackLimit: 5,
-    color: "#8A2BE2",
-  }, // BlueViolet
-  {
-    id: "scrap_metal",
-    name: "スクラップ金属",
-    description: "ガラクタの金属。何かに使えるかも？",
-    type: "material",
-    size: { width: 1, height: 1 },
-    stackLimit: 20,
-    color: "#A9A9A9",
-  }, // DarkGray
-  {
-    id: "rare_gem",
-    name: "レアな宝石",
-    description: "非常に珍しい輝く宝石。高値で売れる。",
-    type: "valuable",
-    size: { width: 1, height: 1 },
-    stackLimit: 3,
-    color: "#00CED1",
-  }, // DarkTurquoise
-  {
-    id: "compass",
-    name: "方位磁石",
-    description: "方角を示す。",
-    type: "tool",
-    size: { width: 1, height: 1 },
-    stackLimit: 1,
-    color: "#D2B48C",
-  }, // Tan
-  {
-    id: "map",
-    name: "地図",
-    description: "周辺の地形が描かれた地図。",
-    type: "tool",
-    size: { width: 2, height: 2 },
-    stackLimit: 1,
-    color: "#CD853F",
-  }, // Peru
-  {
-    id: "old_book",
-    name: "古びた本",
-    description: "読めない文字で書かれている。",
-    type: "misc",
-    size: { width: 1, height: 1 },
-    stackLimit: 5,
-    color: "#8B4513",
-  }, // SaddleBrown
-  {
-    id: "empty_bottle",
-    name: "空き瓶",
-    description: "何かに使えるかもしれない空の瓶。",
-    type: "misc",
-    size: { width: 1, height: 1 },
-    stackLimit: 10,
-    color: "#ADD8E6",
-  }, // LightBlue
-  {
-    id: "rope",
-    name: "ロープ",
-    description: "丈夫なロープ。",
-    type: "material",
-    size: { width: 1, height: 1 },
-    stackLimit: 15,
-    color: "#BDB76B",
-  }, // DarkKhaki
-  {
-    id: "cloth",
-    name: "布",
-    description: "使い古された布。",
-    type: "material",
-    size: { width: 1, height: 1 },
-    stackLimit: 20,
-    color: "#F0E68C",
-  }, // Khaki
-  {
-    id: "gear",
-    name: "歯車",
-    description: "機械の部品。",
-    type: "material",
-    size: { width: 1, height: 1 },
-    stackLimit: 10,
-    color: "#696969",
-  }, // DimGray
-  {
-    id: "spring",
-    name: "バネ",
-    description: "弾力性のあるバネ。",
-    type: "material",
-    size: { width: 1, height: 1 },
-    stackLimit: 10,
-    color: "#FFD700",
-  }, // Gold
-  {
-    id: "wire",
-    name: "ワイヤー",
-    description: "細い金属線。",
-    type: "material",
-    size: { width: 1, height: 1 },
-    stackLimit: 25,
-    color: "#B0C4DE",
-  }, // LightSteelBlue
-  {
-    id: "battery",
-    name: "バッテリー",
-    description: "電力を供給する。",
-    type: "consumable",
-    size: { width: 1, height: 1 },
-    stackLimit: 8,
-    color: "#32CD32",
-  }, // LimeGreen
-  {
-    id: "medicine",
-    name: "薬",
-    description: "体力を回復する。",
+    description: "飛行船の損傷を修理する。体力を回復する。",
     type: "consumable",
     size: { width: 1, height: 1 },
     stackLimit: 10,
@@ -154,7 +37,7 @@ export const allItemDefinitions = [
   {
     id: "food_ration",
     name: "食料",
-    description: "空腹を満たす。",
+    description: "空腹を満たす。体力を回復する。",
     type: "consumable",
     size: { width: 1, height: 1 },
     stackLimit: 15,
@@ -163,12 +46,21 @@ export const allItemDefinitions = [
   {
     id: "water_bottle",
     name: "水筒",
-    description: "水を運ぶための容器。",
+    description: "水を運ぶための容器。体力を回復する。",
     type: "consumable",
     size: { width: 1, height: 1 },
     stackLimit: 5,
     color: "#4682B4",
   }, // SteelBlue
+  {
+    id: "map",
+    name: "地図",
+    description: "現在の場所と周辺の地図。使用してもなくならない。",
+    type: "tool", // 新しいタイプ: tool
+    size: { width: 1, height: 1 },
+    stackLimit: 1,
+    color: "#8B4513", // SaddleBrown
+  },
 ].map((item) => ({
   ...item,
   imageUrl: generateItemImageUrl(item), // 各アイテムにimageUrlを追加
@@ -185,24 +77,12 @@ export function getItemDefinition(itemId) {
 
 /**
  * アイテムを使用する際のロジック (プレースホルダー)
- * @param {Object} item - 使用するアイテムオブジェクト
- * @param {Object} gameContext - ゲームのコンテキスト（状態と関数）
+ * @param {string} itemId - 使用するアイテムのID
+ * @param {Object} gameContext - ゲームのコンテキストオブジェクト
+ * @returns {boolean} - アイテムの使用に成功したかどうか
  */
-export function useItem(item, gameContext) {
-  switch (item.id) {
-    case "fuel_tank":
-      // 燃料タンク使用時のロジック
-      gameContext.displayMessage("燃料タンクを使った！");
-      // ここに燃料回復のロジックを追加
-      break;
-    case "repair_kit":
-      // 修理キット使用時のロジック
-      gameContext.displayMessage("修理キットを使った！");
-      // ここに船体修理のロジックを追加
-      break;
-    // 他のアイテムのケースを追加
-    default:
-      gameContext.displayMessage(`${item.name}はまだ使えないようだ...`);
-      break;
-  }
+export function useItem(itemId, gameContext) {
+  // TODO: アイテム使用ロジックをここに実装
+  gameContext.displayMessage(`${itemId}を使用しようとしました。`);
+  return false;
 }
