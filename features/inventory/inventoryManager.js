@@ -369,8 +369,13 @@ function renderInventoryGrid() {
   }
   _inventoryGridElement.innerHTML = ""; // 既存のセルをクリア
 
-  // グリッドの列数を設定
-  _inventoryGridElement.style.gridTemplateColumns = `repeat(${_totalBagCols}, 1fr)`;
+  // グリッドの列数を設定 (CSSで固定サイズを設定しているので、ここでは不要だが念のため残す)
+  _inventoryGridElement.style.gridTemplateColumns = `repeat(${_totalBagCols}, 60px)`;
+  _inventoryGridElement.style.gridTemplateRows = `repeat(${_totalBagRows}, 60px)`;
+  // gridのgapはCSSで0pxに設定済み
+
+  const CELL_SIZE = 60; // 1セルの基本サイズ (px)
+  const GAP_SIZE = 0; // セル間の隙間 (px) - CSSで0に設定済み
 
   // 船体コンテナの全てのセルを走査して描画
   for (let i = 0; i < inventoryData.maxItemTypesInShipContainer; i++) {
@@ -386,7 +391,7 @@ function renderInventoryGrid() {
     if (row < 4 && col < 4) {
       cell.dataset.usable = "true";
     } else {
-      cell.classList.add("unusable-cell");
+      cell.classList.add("unusable-cell"); // 無効なセルにはunusable-cellクラスを追加
       cell.dataset.usable = "false";
     }
 
@@ -400,9 +405,24 @@ function renderInventoryGrid() {
         continue;
       }
 
-      // アイテムのサイズに合わせてグリッドセルを結合
-      cell.style.gridColumn = `${col + 1} / span ${itemDef.size.width}`;
-      cell.style.gridRow = `${row + 1} / span ${itemDef.size.height}`;
+      // アイテムのサイズに合わせてセルの幅と高さを明示的に設定
+      // CSS Gridのspanは使わず、直接サイズを計算して設定
+      cell.style.width = `${
+        itemDef.size.width * CELL_SIZE + (itemDef.size.width - 1) * GAP_SIZE
+      }px`;
+      cell.style.height = `${
+        itemDef.size.height * CELL_SIZE + (itemDef.size.height - 1) * GAP_SIZE
+      }px`;
+
+      // アイテムの背景色をセルに適用 (unusable-cellでない場合のみ)
+      if (cell.dataset.usable === "true") {
+        // 追加: 有効なセルにのみアイテムの色を適用
+        cell.style.backgroundColor = itemDef.color;
+      }
+      cell.classList.add("has-item"); // アイテムがあることを示すクラスを追加
+      cell.style.zIndex = "1"; // アイテムが他の空セルより手前に来るように
+      cell.style.gridColumn = `${col + 1} / span ${itemDef.size.width}`; // 位置指定のため残す
+      cell.style.gridRow = `${row + 1} / span ${itemDef.size.height}`; // 位置指定のため残す
 
       // ドラッグ可能に設定
       cell.draggable = true;
@@ -416,18 +436,18 @@ function renderInventoryGrid() {
 
       // アイテム名を表示 (画像の上に配置)
       const nameText = document.createElement("span");
-      nameText.textContent = `${item.name}`; // サイズ情報を削除
+      nameText.textContent = `${item.name}`;
       nameText.classList.add("item-name");
       cell.appendChild(nameText); // 名前を最初に追加
 
-      // アイテムの画像を表示
-      if (item.imageUrl) {
-        const img = document.createElement("img");
-        img.src = item.imageUrl;
-        img.alt = item.name;
-        img.classList.add("item-image");
-        cell.appendChild(img); // 画像を名前の次に追加
-      }
+      // アイテムの画像を表示 (ここをコメントアウトしてサイズ表示をなくす)
+      // if (item.imageUrl) {
+      //   const img = document.createElement("img");
+      //   img.src = item.imageUrl;
+      //   img.alt = item.name;
+      //   img.classList.add("item-image");
+      //   cell.appendChild(img);
+      // }
 
       // 数量を表示
       const quantityText = document.createElement("span");
@@ -436,9 +456,10 @@ function renderInventoryGrid() {
       cell.appendChild(quantityText);
     } else if (typeof item === "string" && item.startsWith("__OCCUPIED_BY_")) {
       // このセルが他のアイテムによって占有されている場合、非表示にする
-      cell.style.display = "none";
+      cell.style.display = "none"; // 非表示にする
       cell.draggable = false; // ドラッグ不可
       cell.dataset.usable = "false"; // ドロップ不可
+      // 背景やボーダーはCSSで定義されたデフォルトのままになるが、display:noneなので見えない
     } else {
       // 空のセル
       cell.textContent = "";
@@ -446,6 +467,12 @@ function renderInventoryGrid() {
       cell.dataset.itemQuantity = 0;
       cell.dataset.itemType = "";
       cell.draggable = false; // ドラッグ不可
+      cell.style.backgroundColor = ""; // 直接設定された背景色をクリア
+      cell.style.border = ""; // 直接設定されたボーダーをクリア
+      cell.style.zIndex = "0"; // 他のアイテムより奥に
+      cell.style.display = "flex"; // 確実に表示されるように
+      cell.style.width = `${CELL_SIZE}px`; // 空のセルも固定サイズ
+      cell.style.height = `${CELL_SIZE}px`; // 空のセルも固定サイズ
     }
 
     // 全てのセルにドロップイベントリスナーを追加（空のセルもドロップターゲットになり得るため）
@@ -649,8 +676,7 @@ function handleDragOver(event) {
     ) {
       // 配置可能な場合、該当するセルをハイライト
       const startRow = Math.floor(potentialTargetIndex / _totalBagCols);
-      const startCol = potentialTargetIndex % _totalBagCols;
-
+      const startCol = Math.floor(potentialTargetIndex % _totalBagCols); // ここもMath.floorを追加
       for (let r = 0; r < itemDef.size.height; r++) {
         for (let c = 0; c < itemDef.size.width; c++) {
           const highlightIndex =
@@ -666,8 +692,7 @@ function handleDragOver(event) {
     } else {
       // 配置できない場合、赤くハイライト
       const startRow = Math.floor(potentialTargetIndex / _totalBagCols);
-      const startCol = potentialTargetIndex % _totalBagCols;
-
+      const startCol = Math.floor(potentialTargetIndex % _totalBagCols); // ここもMath.floorを追加
       for (let r = 0; r < itemDef.size.height; r++) {
         for (let c = 0; c < itemDef.size.width; c++) {
           const highlightIndex =

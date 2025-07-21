@@ -7,9 +7,10 @@ function generateItemImageUrl(item) {
   const height = item.size.height * 60; // 1セル60pxと仮定
   const bgColor = item.color.replace("#", ""); // #を削除
   const textColor = "FFFFFF"; // テキスト色は白に固定
-  const itemText = encodeURIComponent(item.name.replace(/ /g, "+")); // アイテム名をURLエンコードし、スペースを+に置換
+  // アイテム名をURLに含めないように修正
+  // const itemText = encodeURIComponent(item.name.replace(/ /g, "+")); // アイテム名をURLエンコードし、スペースを+に置換
 
-  return `${baseUrl}${width}x${height}/${bgColor}/${textColor}?text=${itemText}`;
+  return `${baseUrl}${width}x${height}/${bgColor}/${textColor}`; // itemTextを削除
 }
 
 /**
@@ -57,7 +58,7 @@ export const allItemDefinitions = [
     name: "地図",
     description: "現在の場所と周辺の地図。使用してもなくならない。",
     type: "tool", // 新しいタイプ: tool
-    size: { width: 1, height: 1 },
+    size: { width: 2, height: 2 }, // ここを2x2に変更
     stackLimit: 1,
     color: "#8B4513", // SaddleBrown
   },
