@@ -7,23 +7,23 @@ import * as Airship from "./location/airship.js";
 import * as Island from "./location/island.js";
 // インベントリマネージャーモジュールをインポート
 import * as InventoryManager from "./features/inventory/inventoryManager.js";
+// 天候マネージャーモジュールをインポート
+import * as WeatherManager from "./features/weather/weatherManager.js";
+import { weatherIconsSvg } from "./resources/weathers.svg.js"; // 天気SVGをインポート
 
 // DOM要素の変数を宣言（初期値はnull）
-let inventoryContainer; // グローバルで宣言
-let inventoryGrid; // グローバルで宣言
+let inventoryContainer;
+let inventoryGrid;
 let modalOverlay;
-let inventoryModalContentWrapper; // グローバルで宣言
+let inventoryModalContentWrapper;
 let itemListArea;
-let availableItemsList; // グローバルで宣言
-let itemListTitle; // グローバルで宣言
+let availableItemsList;
+let itemListTitle;
 let infoModalContentWrapper;
 let infoModalTitle;
 let infoModalText;
-let infoModalPrices; // 新しく追加：価格表示用の要素
+let infoModalPrices;
 let gameTimeDisplay;
-let weatherDisplay;
-let weatherIconContainer;
-let weatherIcons; // オブジェクトとして後で初期化
 let healthValueDisplay;
 let healthBar;
 let fuelValueDisplay;
@@ -39,56 +39,22 @@ let mainContentTitle;
 // ゲームの状態変数
 const maxHealth = 20;
 let currentHealth = maxHealth;
-const maxFuel = 100; // 新しく追加: 燃料の最大値
-let currentFuel = maxFuel; // 新しく追加: 燃料の初期値を最大値に設定
-let currentMoney = 100000; // お金の初期値を10万に変更
-let shipState = "離船中"; // 初期状態を「離船中」に設定
-let currentLocation = "小さな街"; // 現在の場所を管理。初期値は「小さな街」に固定
+const maxFuel = 100;
+let currentFuel = maxFuel;
+let currentMoney = 100000;
+let shipState = "離船中";
+let currentLocation = "小さな街";
 
 // ゲーム内時間変数
-let gameHour = 8; // 初期時間: 午前8時
-let gameMinute = 0; // 新しく追加: 分単位
-let gameDay = 1; // 初期日: 1日目
-
-// 天候パターンと対応するアイコンID
-const weatherPatterns = [
-  { name: "晴れ", iconId: "sunny" },
-  { name: "曇り", iconId: "cloudy" },
-  { name: "雨", iconId: "rainy" },
-  { name: "嵐", iconId: "stormy" },
-  { name: "雪", iconId: "snowy" },
-];
-
-/**
- * 天候をランダムに設定し、表示を更新する関数
- */
-function setRandomWeather() {
-  const randomIndex = Math.floor(Math.random() * weatherPatterns.length);
-  const selectedWeather = weatherPatterns[randomIndex];
-
-  weatherDisplay.textContent = selectedWeather.name;
-
-  // すべてのアイコンを非表示にする
-  for (const key in weatherIcons) {
-    if (weatherIcons[key]) {
-      // 要素が存在するか確認
-      weatherIcons[key].style.display = "none";
-    }
-  }
-
-  // 選択されたアイコンを表示する
-  if (weatherIcons[selectedWeather.iconId]) {
-    // 要素が存在するか確認
-    weatherIcons[selectedWeather.iconId].style.display = "block";
-  }
-  displayMessage(`天候が「${selectedWeather.name}」になりました。`); // メッセージログに表示
-}
+let gameHour = 8;
+let gameMinute = 0;
+let gameDay = 1;
 
 /**
  * 体力表示を更新する関数
  */
 function updateHealthDisplay() {
-  healthValueDisplay.textContent = `${currentHealth} / ${maxHealth}`; // 数値表示を追加
+  healthValueDisplay.textContent = `${currentHealth} / ${maxHealth}`;
   const healthPercentage = (currentHealth / maxHealth) * 100;
   healthBar.style.width = `${healthPercentage}%`;
 
@@ -106,7 +72,7 @@ function updateHealthDisplay() {
  * 燃料表示を更新する関数
  */
 function updateFuelDisplay() {
-  fuelValueDisplay.textContent = `${currentFuel} / ${maxFuel}`; // 数値表示を追加
+  fuelValueDisplay.textContent = `${currentFuel} / ${maxFuel}`;
   const fuelPercentage = (currentFuel / maxFuel) * 100;
   fuelBar.style.width = `${fuelPercentage}%`;
 
@@ -160,7 +126,7 @@ function advanceGameTime(minutes = 1) {
     if (gameHour >= 24) {
       gameHour = 0;
       gameDay++;
-      setRandomWeather(); // 日が変わったら天候もランダムに更新
+      WeatherManager.setRandomWeather(displayMessage); // 日が変わったら天候もランダムに更新
       displayMessage(`新しい日になりました！Day ${gameDay}です。`);
     }
   }
@@ -249,17 +215,9 @@ window.onload = () => {
   infoModalContentWrapper = document.getElementById("infoModalContentWrapper");
   infoModalTitle = document.getElementById("infoModalTitle");
   infoModalText = document.getElementById("infoModalText");
-  infoModalPrices = document.getElementById("infoModalPrices"); // 新しく取得
+  infoModalPrices = document.getElementById("infoModalPrices");
   gameTimeDisplay = document.getElementById("gameTimeDisplay");
-  weatherDisplay = document.getElementById("weatherDisplay");
-  weatherIconContainer = document.querySelector(".weather-icon-container");
-  weatherIcons = {
-    sunny: document.getElementById("icon-sunny"),
-    cloudy: document.getElementById("icon-cloudy"),
-    rainy: document.getElementById("icon-rainy"),
-    stormy: document.getElementById("icon-stormy"),
-    snowy: document.getElementById("icon-snowy"),
-  };
+  // weatherDisplayとweatherIconContainerはWeatherManagerに渡す
   healthValueDisplay = document.getElementById("healthValue");
   healthBar = document.getElementById("healthBar");
   fuelValueDisplay = document.getElementById("fuelValue");
@@ -287,11 +245,20 @@ window.onload = () => {
     7
   ); // 4x4=16スロットが初期で使える、表示は7x7グリッド
 
+  // WeatherManagerを初期化し、必要なDOM要素とSVGアイコンを渡す
+  WeatherManager.initWeather(
+    {
+      weatherDisplay: document.getElementById("weatherDisplay"),
+      weatherIconContainer: document.getElementById("weatherIconContainer"),
+    },
+    weatherIconsSvg
+  );
+
   // ゲーム開始メッセージを最初に表示
   displayMessage("ゲームが開始されました！");
 
   // weatherIconsの初期化後にsetRandomWeatherを呼び出す
-  setRandomWeather(); // 天候を設定
+  WeatherManager.setRandomWeather(displayMessage); // 天候を設定
 
   updateHealthDisplay(); // 体力表示を更新
   updateFuelDisplay(); // 燃料表示を更新
@@ -363,7 +330,7 @@ window.onload = () => {
  * @param {number} durationMinutes - 探索にかかるゲーム分数
  */
 function startIslandExploration(durationMinutes) {
-  displayMessage(`無人島を探索しています... (${durationMinutes}分)`); // メッセージに時間を追加したわ！
+  displayMessage(`無人島を探索しています... (${durationMinutes}分)`);
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -443,7 +410,7 @@ function startAirshipExploration(
 
   displayMessage(
     `飛行船での探索を開始しました。(${durationMinutes}分間の航行)`
-  ); // メッセージに時間を追加したわ！
+  );
   currentFuel -= initialFuelCost; // 初期燃料を消費
   updateFuelDisplay();
 
@@ -495,7 +462,7 @@ function startAirshipExploration(
 function startStrollExploration(durationMinutes) {
   displayMessage(
     `街を散策しています。何か新しい発見があるかもしれません... (${durationMinutes}分)`
-  ); // メッセージに時間を追加したわ！
+  );
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -625,7 +592,7 @@ const gameContext = {
   advanceGameTime: advanceGameTime,
   startIslandExploration: startIslandExploration,
   startAirshipExploration: startAirshipExploration,
-  startStrollExploration: startStrollExploration, // 新しく追加: 散策探索開始関数
+  startStrollExploration: startStrollExploration,
   getRandomTownType: getRandomTownType,
   updateMainContent: updateMainContent, // 循環参照になるが、現状は必要
   disableAllButtons: () => {
@@ -704,7 +671,7 @@ function updateMainContent() {
     if (section.subtitle !== null) {
       const sectionTitle = document.createElement("h4");
       sectionTitle.textContent = section.subtitle;
-      sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
+      sectionTitle.classList.add("action-section-title");
       choicesContainer.appendChild(sectionTitle);
     }
 
@@ -713,7 +680,7 @@ function updateMainContent() {
     if (section.subtitle === null) {
       buttonsWrapper.classList.add("no-subtitle-buttons-wrapper");
     } else {
-      buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
+      buttonsWrapper.classList.add("action-buttons-wrapper");
     }
 
     choicesContainer.appendChild(buttonsWrapper);

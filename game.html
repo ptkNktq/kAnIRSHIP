@@ -9,6 +9,7 @@
     <!-- location.cssを新しく読み込むわよ！ -->
     <link rel="stylesheet" href="location/location.css" />
   </head>
+
   <body>
     <!-- 左側のUI要素をまとめるコンテナ -->
     <div class="left-ui-container">
@@ -134,7 +135,7 @@
     <script type="module">
       import { airshipSvgString } from "./resources/airship.svg.js";
       import { bagSvgString } from "./resources/bag.svg.js";
-      import { weatherIconsSvg } from "./resources/weathers.svg.js";
+      // weatherIconsSvgの直接挿入はWeatherManagerで行うため、ここでは不要になります。
 
       document.addEventListener("DOMContentLoaded", () => {
         // 飛行船SVGを挿入
@@ -148,18 +149,7 @@
         if (bagIconContainer) {
           bagIconContainer.innerHTML = bagSvgString;
         }
-
-        // 天気アイコンSVGを挿入
-        const weatherIconContainer = document.getElementById(
-          "weatherIconContainer"
-        );
-        if (weatherIconContainer) {
-          for (const iconId in weatherIconsSvg) {
-            weatherIconContainer.innerHTML += weatherIconsSvg[iconId];
-          }
-        }
       });
     </script>
-    <!-- リソーステストスクリプトの読み込みを削除したわ！ -->
   </body>
 </html>
