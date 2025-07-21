@@ -285,43 +285,42 @@ const gameContext = {
       currentModule = Shop;
     }
 
-    if (
-      currentModule &&
-      typeof currentModule.calculatePricesForVisit === "function"
+    // 各ロケーションに遷移した際の価格計算ロジックを修正
+    if (currentLocation === "小さな街" && previousLocation === "飛行船") {
+      // 飛行船から小さな街に停泊した場合のみ、小さな街の価格を再計算
+      SmallTown.calculatePricesForVisit(null, gameContext);
+    } else if (
+      currentLocation === "大きな街" &&
+      previousLocation === "飛行船"
     ) {
-      let smallTownPrices = null;
-      // 造船所に行く場合、または造船所から小さな街に戻る場合
-      if (currentLocation === "造船所") {
-        // 造船所に行く場合は、現在の場所が小さな街ならその価格を渡す
-        if (previousLocation === "小さな街") {
-          smallTownPrices = SmallTown.getCurrentVisitPrices();
-        }
-        currentModule.calculatePricesForVisit(
-          null,
-          gameContext,
-          smallTownPrices
-        );
-      } else if (
-        currentLocation === "小さな街" &&
-        previousLocation === "飛行船"
-      ) {
-        // 飛行船から小さな街に停泊した場合のみ、小さな街の価格を再計算
-        SmallTown.calculatePricesForVisit(null, gameContext); // gameContextを渡す
-      } else if (
-        currentLocation === "大きな街" &&
-        previousLocation === "飛行船"
-      ) {
-        // 飛行船から大きな街に停泊した場合のみ、大きな街の価格を再計算
-        LargeTown.calculatePricesForVisit(); // LargeTownの価格をランダムに更新
-      } else if (
-        currentLocation === "お店" &&
-        (previousLocation === "小さな街" || previousLocation === "大きな街")
-      ) {
-        // 街からお店に停泊した場合のみ、お店の価格を再計算
-        Shop.calculatePricesForVisit(null, gameContext); // gameContextを渡す
+      // 飛行船から大きな街に停泊した場合のみ、大きな街の価格を再計算
+      LargeTown.calculatePricesForVisit(null, gameContext);
+    } else if (
+      currentLocation === "お店" &&
+      (previousLocation === "小さな街" || previousLocation === "大きな街")
+    ) {
+      // 街からお店に移動した場合、街で計算された価格倍率をお店に渡す
+      let priceMultiplierToPass = null;
+      if (previousLocation === "小さな街") {
+        const smallTownPrices = SmallTown.getCurrentVisitPrices();
+        priceMultiplierToPass = smallTownPrices.priceMultiplier;
+      } else if (previousLocation === "大きな街") {
+        const largeTownPrices = LargeTown.getCurrentVisitPrices();
+        priceMultiplierToPass = largeTownPrices.priceMultiplier;
       }
-      // その他の場所への移動では価格を更新しない
+      Shop.calculatePricesForVisit(priceMultiplierToPass, gameContext);
+    } else if (
+      currentLocation === "造船所" &&
+      previousLocation === "小さな街"
+    ) {
+      // 小さな街から造船所に移動した場合、小さな街の価格倍率を造船所に渡す
+      const smallTownPrices = SmallTown.getCurrentVisitPrices();
+      Shipyard.calculatePricesForVisit(
+        smallTownPrices.priceMultiplier,
+        gameContext
+      );
     }
+    // その他の場所への移動では価格を更新しない
   },
   // previousLocation のゲッターとセッターを追加
   get previousLocation() {
@@ -712,7 +711,9 @@ function initializeGame() {
     gameDay = 1;
 
     // 初回起動時の「小さな街」の価格設定
-    SmallTown.calculatePricesForVisit(1.0, gameContext); // gameContextを渡す
+    SmallTown.calculatePricesForVisit(null, gameContext); // gameContextを渡す
+    // LargeTownもここで初期化する必要がある場合は追加
+    LargeTown.calculatePricesForVisit(null, gameContext);
 
     console.log("新しいゲームを開始しました。");
   }

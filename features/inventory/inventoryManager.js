@@ -415,10 +415,10 @@ function renderInventoryGrid() {
       }px`;
 
       // アイテムの背景色をセルに適用 (unusable-cellでない場合のみ)
-      if (cell.dataset.usable === "true") {
-        // 追加: 有効なセルにのみアイテムの色を適用
-        cell.style.backgroundColor = itemDef.color;
-      }
+      // ここで背景色を設定する行を削除します
+      // if (cell.dataset.usable === "true") {
+      //   cell.style.backgroundColor = itemDef.color;
+      // }
       cell.classList.add("has-item"); // アイテムがあることを示すクラスを追加
       cell.style.zIndex = "1"; // アイテムが他の空セルより手前に来るように
       cell.style.gridColumn = `${col + 1} / span ${itemDef.size.width}`; // 位置指定のため残す
@@ -440,14 +440,14 @@ function renderInventoryGrid() {
       nameText.classList.add("item-name");
       cell.appendChild(nameText); // 名前を最初に追加
 
-      // アイテムの画像を表示 (ここをコメントアウトしてサイズ表示をなくす)
-      // if (item.imageUrl) {
-      //   const img = document.createElement("img");
-      //   img.src = item.imageUrl;
-      //   img.alt = item.name;
-      //   img.classList.add("item-image");
-      //   cell.appendChild(img);
-      // }
+      // アイテムの画像を表示
+      if (item.imageUrl) {
+        const img = document.createElement("img");
+        img.src = item.imageUrl;
+        img.alt = item.name;
+        img.classList.add("item-image");
+        cell.appendChild(img);
+      }
 
       // 数量を表示
       const quantityText = document.createElement("span");

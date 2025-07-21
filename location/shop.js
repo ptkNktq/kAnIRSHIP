@@ -1,17 +1,12 @@
 // location/shop.js
 
-// InventoryManagerからアイテム定義をインポートする想定
-// 実際にはInventoryManager.jsで定義されたアイテムにアクセスできるようにする
-// 仮のアイテム定義
-const itemDefinitions = {
-  燃料タンク: { name: "燃料タンク", type: "consumable", price: 1000 },
-  修理キット: { name: "修理キット", type: "consumable", price: 2000 },
-};
+import { getItemDefinition } from "../features/inventory/item.js"; // item.jsからgetItemDefinitionをインポート
 
 // 現在の訪問での価格を保持する変数
 let currentVisitPrices = {
   fuelTankPrice: 0,
   repairKitPrice: 0,
+  // priceMultiplierはsmallTownから渡されるため、ここでは保持しない
 };
 
 export function getTitle() {
@@ -49,26 +44,21 @@ export function getPricesInfo() {
 /**
  * お店に到着した時点で価格を計算し、設定する関数
  * この関数はgame.jsから呼び出されることを想定しています。
- * @param {number|null} fixedMultiplier - 固定の価格倍率。指定されない場合はランダムな倍率を使用。
+ * @param {number} priceMultiplier - 街から渡される固定の価格倍率。
  * @param {Object|null} gameContext - ゲームのコンテキスト (現在は使用しないが、引数として受け取る)
  */
 export function calculatePricesForVisit(
-  fixedMultiplier = null,
+  priceMultiplier, // fixedMultiplierではなく、直接priceMultiplierとして受け取る
   gameContext = null
 ) {
-  let priceMultiplier;
-  if (fixedMultiplier !== null) {
-    priceMultiplier = fixedMultiplier;
-  } else {
-    // 例: 0.8から1.2の範囲で価格を変動させる
-    priceMultiplier = 0.8 + Math.random() * (1.2 - 0.8);
-  }
+  const fuelTankDef = getItemDefinition("fuel_tank");
+  const repairKitDef = getItemDefinition("repair_kit");
 
   currentVisitPrices.fuelTankPrice = Math.round(
-    itemDefinitions["燃料タンク"].price * priceMultiplier
+    fuelTankDef.price * priceMultiplier
   );
   currentVisitPrices.repairKitPrice = Math.round(
-    itemDefinitions["修理キット"].price * priceMultiplier
+    repairKitDef.price * priceMultiplier
   );
 
   console.log(
@@ -152,7 +142,7 @@ export function executeAction(actionName, gameContext) {
 function buyFuelTank(gameContext) {
   const cost = currentVisitPrices.fuelTankPrice;
   if (gameContext.currentMoney >= cost) {
-    const fuelTankDef = itemDefinitions["燃料タンク"];
+    const fuelTankDef = getItemDefinition("fuel_tank"); // getItemDefinitionで取得
     const addedSuccessfully = gameContext.addItemToBag(fuelTankDef, 1); // 1個購入
     if (addedSuccessfully) {
       gameContext.currentMoney -= cost;
@@ -178,7 +168,7 @@ function buyFuelTank(gameContext) {
 function buyRepairKit(gameContext) {
   const cost = currentVisitPrices.repairKitPrice;
   if (gameContext.currentMoney >= cost) {
-    const repairKitDef = itemDefinitions["修理キット"];
+    const repairKitDef = getItemDefinition("repair_kit"); // getItemDefinitionで取得
     const addedSuccessfully = gameContext.addItemToBag(repairKitDef, 1); // 1個購入
     if (addedSuccessfully) {
       gameContext.currentMoney -= cost;

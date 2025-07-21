@@ -1,5 +1,7 @@
 // location/smallTown.js
 
+import * as Shop from "./shop.js"; // Shopモジュールをインポート
+
 export const minPriceMultiplierSmallTown = 0.95; // exportを追加
 export const maxPriceMultiplierSmallTown = 1.3; // exportを追加
 
@@ -10,6 +12,7 @@ const baseFuelCostPerUnit = 20;
 let currentVisitPrices = {
   repairCostPerDurability: 0, // 体力から耐久に変更
   fuelCostPerUnit: 0,
+  priceMultiplier: null, // 新しく追加: 価格倍率を保持する変数
 };
 
 export function getTitle() {
@@ -45,29 +48,31 @@ export function calculatePricesForVisit(
   fixedMultiplier = null,
   gameContext = null
 ) {
-  let priceMultiplier;
-  if (fixedMultiplier !== null) {
-    priceMultiplier = fixedMultiplier;
-  } else {
-    priceMultiplier =
-      minPriceMultiplierSmallTown +
-      Math.random() *
-        (maxPriceMultiplierSmallTown - minPriceMultiplierSmallTown);
+  // priceMultiplierが既に設定されていれば再計算しない
+  if (currentVisitPrices.priceMultiplier === null) {
+    if (fixedMultiplier !== null) {
+      currentVisitPrices.priceMultiplier = fixedMultiplier;
+    } else {
+      currentVisitPrices.priceMultiplier =
+        minPriceMultiplierSmallTown +
+        Math.random() *
+          (maxPriceMultiplierSmallTown - minPriceMultiplierSmallTown);
+    }
   }
 
   currentVisitPrices.repairCostPerDurability = Math.round(
     // 体力から耐久に変更
-    baseRepairCostPerDurability * priceMultiplier // 体力から耐久に変更
+    baseRepairCostPerDurability * currentVisitPrices.priceMultiplier // 体力から耐久に変更
   );
   currentVisitPrices.fuelCostPerUnit = Math.round(
-    baseFuelCostPerUnit * priceMultiplier
+    baseFuelCostPerUnit * currentVisitPrices.priceMultiplier
   );
   console.log(
     `Small Town Prices calculated: Repair=${
       currentVisitPrices.repairCostPerDurability
     }, Fuel=${
       currentVisitPrices.fuelCostPerUnit
-    } (Multiplier: ${priceMultiplier.toFixed(2)})`
+    } (Multiplier: ${currentVisitPrices.priceMultiplier.toFixed(2)})`
   );
 }
 
@@ -204,6 +209,21 @@ function goToShop(gameContext) {
   gameContext.previousLocation = gameContext.currentLocation; // お店に行く前に現在の場所を保存
   gameContext.displayMessage("お店に入りました。");
   gameContext.currentLocation = "お店"; // 場所をお店に変更
+
+  // SmallTownで計算された価格倍率をShopに渡す
+  if (currentVisitPrices.priceMultiplier !== null) {
+    Shop.calculatePricesForVisit(
+      currentVisitPrices.priceMultiplier,
+      gameContext
+    );
+  } else {
+    // もし何らかの理由でSmallTownのpriceMultiplierがnullの場合のフォールバック
+    // （通常はcalculatePricesForVisitが呼ばれているはずなので発生しない想定）
+    Shop.calculatePricesForVisit(1.0, gameContext); // デフォルトの倍率を渡す
+    console.warn(
+      "SmallTown priceMultiplier was null when going to shop. Using default multiplier."
+    );
+  }
 }
 
 /**

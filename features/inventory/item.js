@@ -1,16 +1,40 @@
 // features/inventory/item.js
 
+import { mapSvgString, repairKitSvgString } from "../../resources/items.svg.js"; // mapSvgStringとrepairKitSvgStringをインポート
+
 // アイテムの画像URLを生成するヘルパー関数
 function generateItemImageUrl(item) {
+  // 地図アイテムの場合は、専用のSVGデータを使用する
+  if (item.id === "map") {
+    // SVGをBase64エンコードしてData URLとして返す
+    const encodedSvg = encodeURIComponent(mapSvgString).replace(
+      /%([0-9A-F]{2})/g,
+      function toSolidBytes(match, p1) {
+        return String.fromCharCode("0x" + p1);
+      }
+    );
+    return `data:image/svg+xml;base64,${btoa(encodedSvg)}`;
+  }
+
+  // 修理キットアイテムの場合は、専用のSVGデータを使用する
+  if (item.id === "repair_kit") {
+    const encodedSvg = encodeURIComponent(repairKitSvgString).replace(
+      /%([0-9A-F]{2})/g,
+      function toSolidBytes(match, p1) {
+        return String.fromCharCode("0x" + p1);
+      }
+    );
+    return `data:image/svg+xml;base64,${btoa(encodedSvg)}`;
+  }
+
+  // それ以外のアイテムはplacehold.coを使用
   const baseUrl = "https://placehold.co/";
   const width = item.size.width * 60; // 1セル60pxと仮定
   const height = item.size.height * 60; // 1セル60pxと仮定
   const bgColor = item.color.replace("#", ""); // #を削除
   const textColor = "FFFFFF"; // テキスト色は白に固定
-  // アイテム名をURLに含めないように修正
-  // const itemText = encodeURIComponent(item.name.replace(/ /g, "+")); // アイテム名をURLエンコードし、スペースを+に置換
 
-  return `${baseUrl}${width}x${height}/${bgColor}/${textColor}`; // itemTextを削除
+  return `${baseUrl}${width}x${height}/${bgColor}/${textColor}`;
 }
 
 /**
@@ -25,6 +49,7 @@ export const allItemDefinitions = [
     size: { width: 1, height: 2 },
     stackLimit: 10,
     color: "#FF6347",
+    price: 50, // 価格を追加
   }, // Tomato
   {
     id: "repair_kit",
@@ -34,6 +59,7 @@ export const allItemDefinitions = [
     size: { width: 1, height: 1 },
     stackLimit: 10,
     color: "#FF69B4",
+    price: 75, // 価格を追加
   }, // HotPink
   {
     id: "food_ration",
@@ -43,6 +69,7 @@ export const allItemDefinitions = [
     size: { width: 1, height: 1 },
     stackLimit: 15,
     color: "#DAA520",
+    price: 20, // 価格を追加
   }, // Goldenrod
   {
     id: "water_bottle",
@@ -52,6 +79,7 @@ export const allItemDefinitions = [
     size: { width: 1, height: 1 },
     stackLimit: 5,
     color: "#4682B4",
+    price: 10, // 価格を追加
   }, // SteelBlue
   {
     id: "map",
@@ -61,6 +89,7 @@ export const allItemDefinitions = [
     size: { width: 2, height: 2 }, // ここを2x2に変更
     stackLimit: 1,
     color: "#8B4513", // SaddleBrown
+    price: 200, // 価格を追加
   },
 ].map((item) => ({
   ...item,
