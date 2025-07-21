@@ -1,9 +1,8 @@
 // location/smallTown.js
 
-const baseRepairCostPerHealth = 50; // 体力1あたりの修理基本コスト
-const baseFuelCostPerUnit = 20; // 燃料1ユニットあたりの基本コスト
+const baseRepairCostPerHealth = 50;
+const baseFuelCostPerUnit = 20;
 
-// 小さな街の価格変動範囲
 const minPriceMultiplierSmallTown = 0.95;
 const maxPriceMultiplierSmallTown = 1.3;
 
@@ -44,12 +43,12 @@ export function getPricesInfo() {
 export function calculatePricesForVisit(fixedMultiplier = null) {
   let priceMultiplier;
   if (fixedMultiplier !== null) {
-    priceMultiplier = fixedMultiplier; // 固定倍率を使用
+    priceMultiplier = fixedMultiplier;
   } else {
     priceMultiplier =
       minPriceMultiplierSmallTown +
       Math.random() *
-        (maxPriceMultiplierSmallTown - minPriceMultiplierSmallTown); // ランダムな倍率を使用
+        (maxPriceMultiplierSmallTown - minPriceMultiplierSmallTown);
   }
 
   currentVisitPrices.repairCostPerHealth = Math.round(
@@ -76,7 +75,7 @@ export function getActions() {
           text: "街を散策する (30分)",
           actionName: "strollTown",
           className: "choice-button-default",
-        }, // 所要時間を追加したわ！
+        },
         {
           text: "お店に行く",
           actionName: "goToShop",
@@ -88,23 +87,18 @@ export function getActions() {
       subtitle: "飛行船",
       buttons: [
         {
-          text: "船を修理する",
+          text: "修理する",
           actionName: "repairShip",
           className: "choice-button-default",
           disabledCondition: (context) =>
             context.currentHealth === context.maxHealth,
         },
         {
-          text: "燃料を補給する",
+          text: "燃料補給する",
           actionName: "refuel",
           className: "choice-button-default",
           disabledCondition: (context) =>
             context.currentFuel === context.maxFuel,
-        },
-        {
-          text: "飛行船を改造する",
-          actionName: "customize",
-          className: "choice-button-default",
         },
       ],
     },
@@ -132,9 +126,6 @@ export function executeAction(actionName, gameContext) {
     case "goToShop":
       goToShop(gameContext);
       break;
-    case "customize":
-      customize(gameContext);
-      break;
     case "strollTown":
       strollTown(gameContext);
       break;
@@ -158,7 +149,7 @@ function repairShip(gameContext) {
     return;
   }
 
-  const costPerHealth = currentVisitPrices.repairCostPerHealth; // 事前に計算された価格を使用
+  const costPerHealth = currentVisitPrices.repairCostPerHealth;
   const totalCost = healthNeeded * costPerHealth;
 
   if (gameContext.currentMoney >= totalCost) {
@@ -185,7 +176,7 @@ function refuel(gameContext) {
     return;
   }
 
-  const costPerUnit = currentVisitPrices.fuelCostPerUnit; // 事前に計算された価格を使用
+  const costPerUnit = currentVisitPrices.fuelCostPerUnit;
   const totalCost = fuelNeeded * costPerUnit;
 
   if (gameContext.currentMoney >= totalCost) {
@@ -209,18 +200,6 @@ function goToShop(gameContext) {
   gameContext.displayMessage(
     "お店に入りました。何を買いますか？（この機能はまだ開発中です）"
   );
-  // 将来的にアイテム購入などのロジックを追加
-}
-
-/**
- * 改造する（仮の処理）
- * @param {Object} gameContext - ゲームのコンテキスト
- */
-function customize(gameContext) {
-  gameContext.displayMessage(
-    "飛行船の改造工房に来ました。（この機能はまだ開発中です）"
-  );
-  // 将来的に飛行船のアップグレードなどのロジックを追加
 }
 
 /**
@@ -228,7 +207,7 @@ function customize(gameContext) {
  * @param {Object} gameContext - ゲームのコンテキスト
  */
 function strollTown(gameContext) {
-  gameContext.startStrollExploration(30); // 30分間の散策を開始
+  gameContext.startStrollExploration(30);
 }
 
 /**

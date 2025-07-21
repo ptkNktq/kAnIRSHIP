@@ -54,21 +54,18 @@ test("getActions() は正しいサブタイトルとボタンを持つこと", (
     `2番目のサブタイトル: 期待値 '飛行船', 実際 '${actions[1].subtitle}'`
   );
   console.assert(
-    actions[1].buttons.length === 3,
-    `2番目のボタン数: 期待値 3, 実際 ${actions[1].buttons.length}`
+    actions[1].buttons.length === 2,
+    `2番目のボタン数: 期待値 2, 実際 ${actions[1].buttons.length}`
+  ); // 期待値を3から2に変更したわ！
+  console.assert(
+    actions[1].buttons[0].text === "修理する",
+    `3番目のボタンテキスト: 期待値 '修理する', 実際 '${actions[1].buttons[0].text}'`
   );
   console.assert(
-    actions[1].buttons[0].text === "船を修理する",
-    `3番目のボタンテキスト: 期待値 '船を修理する', 実際 '${actions[1].buttons[0].text}'`
+    actions[1].buttons[1].text === "燃料補給する",
+    `4番目のボタンテキスト: 期待値 '燃料補給する', 実際 '${actions[1].buttons[1].text}'`
   );
-  console.assert(
-    actions[1].buttons[1].text === "燃料を補給する",
-    `4番目のボタンテキスト: 期待値 '燃料を補給する', 実際 '${actions[1].buttons[1].text}'`
-  );
-  console.assert(
-    actions[1].buttons[2].text === "飛行船を改造する",
-    `5番目のボタンテキスト: 期待値 '飛行船を改造する', 実際 '${actions[1].buttons[2].text}'`
-  );
+  // 「改造する」ボタンのテストは削除したわ！
 
   // 3番目のセクション: サブタイトルなし (移動)
   console.assert(
