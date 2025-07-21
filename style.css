@@ -28,6 +28,11 @@ body {
 }
 
 /* モーダルが開いている状態のクラス */
+.modal-overlay.is-open {
+  display: block;
+}
+
+/* モーダルコンテンツラッパーのis-openクラス */
 .modal-content-wrapper.is-open {
   display: flex; /* is-openクラスが付いたら表示 */
 }
@@ -346,7 +351,7 @@ body {
   margin-right: 5px;
 }
 
-.health-bar-container,
+.durability-bar-container,
 .fuel-bar-container {
   /* 燃料ゲージにも同じスタイルを適用 */
   height: 20px;
@@ -362,7 +367,7 @@ body {
   align-items: center;
 }
 
-.health-bar {
+.durability-bar {
   height: 100%;
   width: 100%;
   background-color: #27ae60;
@@ -385,7 +390,7 @@ body {
   z-index: 1;
 }
 
-.health-value-overlay,
+.durability-value-overlay,
 .fuel-value-overlay {
   /* 燃料ゲージの数値表示にも同じスタイルを適用 */
   position: absolute;
@@ -840,7 +845,7 @@ body {
     font-size: 1em;
     gap: 6px;
   }
-  .health-bar-container,
+  .durability-bar-container,
   .fuel-bar-container {
     /* 燃料ゲージにも同じスタイルを適用 */
     height: 16px;
@@ -850,7 +855,7 @@ body {
     height: 20px;
     margin-left: 8px;
   }
-  .health-value-overlay,
+  .durability-value-overlay,
   .fuel-value-overlay {
     /* 燃料ゲージの数値表示にも同じスタイルを適用 */
     font-size: 0.8em;
@@ -955,7 +960,7 @@ body {
     font-size: 1em;
     gap: 6px;
   }
-  .health-bar-container,
+  .durability-bar-container,
   .fuel-bar-container {
     /* 燃料ゲージにも同じスタイルを適用 */
     height: 16px;
@@ -965,7 +970,7 @@ body {
     height: 20px;
     margin-left: 5px;
   }
-  .health-value-overlay,
+  .durability-value-overlay,
   .fuel-value-overlay {
     /* 燃料ゲージの数値表示にも同じスタイルを適用 */
     font-size: 0.7em;

@@ -6,7 +6,7 @@ import {
   getCurrentVisitPrices, // 新しく追加: smallTownの現在の価格を取得する関数
 } from "./smallTown.js"; // 小さな街の価格倍率と現在の価格をインポート
 
-const baseRepairCostPerHealth = 40; // 小さな街より少し安く設定
+const baseRepairCostPerDurability = 40; // 体力から耐久に変更 // 小さな街より少し安く設定
 const baseFuelCostPerUnit = 15; // 小さな街より少し安く設定
 const baseModificationCost = 5000; // 改造の基本費用
 
@@ -15,7 +15,7 @@ const maxPriceMultiplierShipyard = 1.1;
 
 // 現在の訪問での価格を保持する変数
 let currentVisitPrices = {
-  repairCostPerHealth: 0,
+  repairCostPerDurability: 0, // 体力から耐久に変更
   fuelCostPerUnit: 0,
   modificationCost: 0,
 };
@@ -63,7 +63,7 @@ export function getInfo(gameContext) {
  */
 export function getPricesInfo(gameContext) {
   let prices =
-    `現在の修理費用: 体力1あたり ${currentVisitPrices.repairCostPerHealth.toLocaleString()} バルク\n` +
+    `現在の修理費用: 耐久1あたり ${currentVisitPrices.repairCostPerDurability.toLocaleString()} バルク\n` + // 体力から耐久に変更
     `現在の燃料費用: 燃料1ユニットあたり ${currentVisitPrices.fuelCostPerUnit.toLocaleString()} バルク`;
   if (gameContext && gameContext.previousLocation !== "小さな街") {
     prices += `\n改造費用: ${currentVisitPrices.modificationCost.toLocaleString()} バルク`;
@@ -92,8 +92,8 @@ export function calculatePricesForVisit(
   ) {
     console.log(`${smallTownCurrentPrices}`);
     // 小さな街から来た場合、小さな街の現在の価格をそのまま使う
-    currentVisitPrices.repairCostPerHealth =
-      smallTownCurrentPrices.repairCostPerHealth;
+    currentVisitPrices.repairCostPerDurability =
+      smallTownCurrentPrices.repairCostPerDurability; // 体力から耐久に変更
     currentVisitPrices.fuelCostPerUnit = smallTownCurrentPrices.fuelCostPerUnit;
 
     // 改造費用は造船所の基本料金を基準に、造船所独自の倍率を適用
@@ -115,9 +115,9 @@ export function calculatePricesForVisit(
           Math.random() *
             (maxPriceMultiplierShipyard - minPriceMultiplierShipyard);
 
-    currentVisitPrices.repairCostPerHealth = Math.round(
-      baseRepairCostPerHealth * priceMultiplier
-    );
+    currentVisitPrices.repairCostPerDurability = Math.round(
+      baseRepairCostPerDurability * priceMultiplier
+    ); // 体力から耐久に変更
     currentVisitPrices.fuelCostPerUnit = Math.round(
       baseFuelCostPerUnit * priceMultiplier
     );
@@ -127,7 +127,7 @@ export function calculatePricesForVisit(
   }
   console.log(
     `Shipyard Prices calculated: Repair=${
-      currentVisitPrices.repairCostPerHealth
+      currentVisitPrices.repairCostPerDurability
     }, Fuel=${currentVisitPrices.fuelCostPerUnit}, Modification=${
       currentVisitPrices.modificationCost
     } (Multiplier: ${priceMultiplier.toFixed(2)})`
@@ -149,7 +149,7 @@ export function getActions(gameContext) {
           actionName: "repairShip",
           className: "choice-button-default",
           disabledCondition: (context) =>
-            context.currentHealth === context.maxHealth,
+            context.currentDurability === context.maxDurability, // 体力から耐久に変更
         },
         {
           text: "燃料補給する",
@@ -168,7 +168,7 @@ export function getActions(gameContext) {
           actionName: "returnToAirship",
           className: "choice-button-primary",
         },
-      ],
+      ], // 空の配列を削除したわ！
     },
   ];
 
@@ -209,18 +209,19 @@ export function executeAction(actionName, gameContext) {
  * @param {Object} gameContext - ゲームのコンテキスト
  */
 function repairShip(gameContext) {
-  const healthNeeded = gameContext.maxHealth - gameContext.currentHealth;
-  if (healthNeeded <= 0) {
+  const durabilityNeeded =
+    gameContext.maxDurability - gameContext.currentDurability; // 体力から耐久に変更
+  if (durabilityNeeded <= 0) {
     gameContext.displayMessage("船は最大まで修理されています。");
     return;
   }
 
-  const costPerHealth = currentVisitPrices.repairCostPerHealth;
-  const totalCost = healthNeeded * costPerHealth;
+  const costPerDurability = currentVisitPrices.repairCostPerDurability; // 体力から耐久に変更
+  const totalCost = durabilityNeeded * costPerDurability; // 体力から耐久に変更
 
   if (gameContext.currentMoney >= totalCost) {
     gameContext.currentMoney -= totalCost;
-    gameContext.currentHealth = gameContext.maxHealth;
+    gameContext.currentDurability = gameContext.maxDurability; // 体力から耐久に変更
     gameContext.displayMessage(
       `船を完全に修理しました。費用: ${totalCost.toLocaleString()} バルク。`
     );

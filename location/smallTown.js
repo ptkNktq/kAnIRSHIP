@@ -3,12 +3,12 @@
 export const minPriceMultiplierSmallTown = 0.95; // exportを追加
 export const maxPriceMultiplierSmallTown = 1.3; // exportを追加
 
-const baseRepairCostPerHealth = 50;
+const baseRepairCostPerDurability = 50; // 体力から耐久に変更
 const baseFuelCostPerUnit = 20;
 
 // 現在の訪問での価格を保持する変数
 let currentVisitPrices = {
-  repairCostPerHealth: 0,
+  repairCostPerDurability: 0, // 体力から耐久に変更
   fuelCostPerUnit: 0,
 };
 
@@ -30,7 +30,7 @@ export function getInfo() {
  */
 export function getPricesInfo() {
   return (
-    `現在の修理費用: 体力1あたり ${currentVisitPrices.repairCostPerHealth.toLocaleString()} バルク\n` +
+    `現在の修理費用: 耐久1あたり ${currentVisitPrices.repairCostPerDurability.toLocaleString()} バルク\n` + // 体力から耐久に変更
     `現在の燃料費用: 燃料1ユニットあたり ${currentVisitPrices.fuelCostPerUnit.toLocaleString()} バルク`
   );
 }
@@ -55,15 +55,16 @@ export function calculatePricesForVisit(
         (maxPriceMultiplierSmallTown - minPriceMultiplierSmallTown);
   }
 
-  currentVisitPrices.repairCostPerHealth = Math.round(
-    baseRepairCostPerHealth * priceMultiplier
+  currentVisitPrices.repairCostPerDurability = Math.round(
+    // 体力から耐久に変更
+    baseRepairCostPerDurability * priceMultiplier // 体力から耐久に変更
   );
   currentVisitPrices.fuelCostPerUnit = Math.round(
     baseFuelCostPerUnit * priceMultiplier
   );
   console.log(
     `Small Town Prices calculated: Repair=${
-      currentVisitPrices.repairCostPerHealth
+      currentVisitPrices.repairCostPerDurability
     }, Fuel=${
       currentVisitPrices.fuelCostPerUnit
     } (Multiplier: ${priceMultiplier.toFixed(2)})`
@@ -144,18 +145,19 @@ export function executeAction(actionName, gameContext) {
  * @param {Object} gameContext - ゲームのコンテキスト
  */
 function repairShip(gameContext) {
-  const healthNeeded = gameContext.maxHealth - gameContext.currentHealth;
-  if (healthNeeded <= 0) {
+  const durabilityNeeded =
+    gameContext.maxDurability - gameContext.currentDurability; // 体力から耐久に変更
+  if (durabilityNeeded <= 0) {
     gameContext.displayMessage("船は最大まで修理されています。");
     return;
   }
 
-  const costPerHealth = currentVisitPrices.repairCostPerHealth;
-  const totalCost = healthNeeded * costPerHealth;
+  const costPerDurability = currentVisitPrices.repairCostPerDurability; // 体力から耐久に変更
+  const totalCost = durabilityNeeded * costPerDurability; // 体力から耐久に変更
 
   if (gameContext.currentMoney >= totalCost) {
     gameContext.currentMoney -= totalCost;
-    gameContext.currentHealth = gameContext.maxHealth;
+    gameContext.currentDurability = gameContext.maxDurability; // 体力から耐久に変更
     gameContext.displayMessage(
       `船を完全に修理しました。費用: ${totalCost.toLocaleString()} バルク。`
     );
@@ -194,14 +196,14 @@ function refuel(gameContext) {
 }
 
 /**
- * お店に行く（仮の処理）
+ * お店に行く
  * @param {Object} gameContext - ゲームのコンテキスト
  */
 function goToShop(gameContext) {
   gameContext.advanceGameTime(10); // 10分経過
-  gameContext.displayMessage(
-    "お店に入りました。何を買いますか？（この機能はまだ開発中です）"
-  );
+  gameContext.previousLocation = gameContext.currentLocation; // お店に行く前に現在の場所を保存
+  gameContext.displayMessage("お店に入りました。");
+  gameContext.currentLocation = "お店"; // 場所をお店に変更
 }
 
 /**

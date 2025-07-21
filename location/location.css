@@ -187,6 +187,18 @@
   box-shadow: 0 2px #999999;
 }
 
+/* 新しく追加: ボタンがない場合のメッセージスタイル */
+.no-action-message {
+  color: #666; /* 少し薄い色に */
+  font-style: italic; /* 斜体にする */
+  text-align: center;
+  padding: 5px 10px; /* 上下のパディングを調整 */
+  background-color: rgba(0, 0, 0, 0.05); /* 薄い背景色 */
+  border-radius: 5px;
+  width: 100%; /* 親の幅に合わせる */
+  box-sizing: border-box; /* パディングとボーダーを幅に含める */
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .main-content-area {
