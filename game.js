@@ -5,6 +5,7 @@ import * as SmallTown from "./location/smallTown.js";
 import * as LargeTown from "./location/largeTown.js";
 import * as Airship from "./location/airship.js";
 import * as Island from "./location/island.js";
+import * as Shipyard from "./location/shipyard.js"; // 新しく追加: 造船所モジュール
 // インベントリマネージャーモジュールをインポート
 import * as InventoryManager from "./features/inventory/inventoryManager.js";
 // 天候マネージャーモジュールをインポート
@@ -34,7 +35,6 @@ let fuelBar;
 let moneyDisplay;
 let messageLog;
 let bagIcon;
-let shipStateDisplay;
 let mainContentText;
 let choicesContainer;
 let mainContentTitle;
@@ -47,6 +47,7 @@ let currentFuel = maxFuel; // 新しく追加: 燃料の初期値を最大値に
 let currentMoney = 100000; // お金の初期値を10万に変更
 let shipState = "離船中"; // 初期状態を「離船中」に設定
 let currentLocation = "小さな街"; // 現在の場所を管理。初期値は「小さな街」に固定
+let previousLocation = "飛行船"; // 新しく追加: 前の場所を記憶
 
 // ゲーム内時間変数
 let gameHour = 8; // 初期時間: 午前8時
@@ -95,15 +96,6 @@ function updateFuelDisplay() {
 function updateMoneyDisplay() {
   // toLocaleString() を使用して3桁区切りにフォーマット
   moneyDisplay.textContent = `${currentMoney.toLocaleString()} バルク`;
-}
-
-/**
- * 船の状態表示を更新する関数
- */
-function updateShipStateDisplay() {
-  shipStateDisplay.textContent = shipState;
-  // 船の状態が変わったらメインコンテンツの選択肢も更新
-  updateMainContent();
 }
 
 /**
@@ -190,11 +182,14 @@ function toggleModal(modalType, moduleInfo = null) {
 
     // 街の説明文を設定
     if (infoModalTitle) infoModalTitle.textContent = moduleInfo.getTitle();
-    if (infoModalText) infoModalText.textContent = moduleInfo.getInfo();
+    // ここで gameContext を渡すように修正
+    if (infoModalText)
+      infoModalText.textContent = moduleInfo.getInfo(gameContext);
 
     // 価格情報を設定 (getPricesInfo関数が存在する場合のみ)
+    // ここで gameContext を渡すように修正
     if (infoModalPrices && typeof moduleInfo.getPricesInfo === "function") {
-      infoModalPrices.textContent = moduleInfo.getPricesInfo();
+      infoModalPrices.textContent = moduleInfo.getPricesInfo(gameContext);
       infoModalPrices.style.display = "block"; // 表示を有効にする
     } else if (infoModalPrices) {
       infoModalPrices.style.display = "none"; // 価格情報がない場合は非表示にする
@@ -239,7 +234,6 @@ window.onload = () => {
   moneyDisplay = document.getElementById("moneyDisplay");
   messageLog = document.getElementById("messageLog");
   bagIcon = document.getElementById("bagIcon");
-  shipStateDisplay = document.getElementById("shipStateDisplay");
   mainContentText = document.getElementById("mainContentText");
   choicesContainer = document.getElementById("choicesContainer");
   mainContentTitle = document.getElementById("mainContentTitle");
@@ -260,9 +254,6 @@ window.onload = () => {
     true // 初期化時のメッセージ表示を抑制
   ); // 4x4=16スロットが初期で使える、表示は7x7グリッド
 
-  // ゲーム開始メッセージを最初に表示しない
-  // displayMessage("ゲームが開始されました！"); // この行を削除
-
   // weatherIconsの初期化後にsetRandomWeatherを呼び出す（メッセージを抑制）
   WeatherManager.setRandomWeather(displayMessage, true); // 天候を設定（メッセージ抑制）
 
@@ -271,12 +262,17 @@ window.onload = () => {
   updateMoneyDisplay(); // お金表示を更新
   updateGameTimeDisplay(); // 新しく追加: ゲーム時間表示を更新
 
-  // 初回起動時の「小さな街」の価格を固定で設定する
-  // calculatePricesForVisitに1.0を渡すことで、ランダムではなくベース価格が設定される
-  SmallTown.calculatePricesForVisit(1.0);
+  // 初回起動時の「小さな街」の価格設定
+  // currentLocationが初期値で、かつpreviousLocationが初期値（飛行船）の場合にのみ実行
+  if (currentLocation === "小さな街" && previousLocation === "飛行船") {
+    SmallTown.calculatePricesForVisit(1.0, gameContext); // gameContextを渡す
+  }
 
-  updateShipStateDisplay(); // 船の状態表示を更新（メインコンテンツも更新される）
+  updateMainContent(); // ここで明示的に呼び出すように修正したわ！
   console.log("ゲームがロードされました！");
+
+  // ゲーム開始時のメッセージをログに表示
+  gameContext.displayMessage("ゲームを開始しました！小さな街に到着しました。");
 
   // キーが押された時のイベントリスナーを設定
   document.addEventListener("keydown", (event) => {
@@ -327,6 +323,9 @@ window.onload = () => {
           currentModule = SmallTown;
         } else if (currentLocation === "無人島") {
           currentModule = Island;
+        } else if (currentLocation === "造船所") {
+          // 新しく追加: 造船所
+          currentModule = Shipyard;
         }
         // 飛行船の場所では情報モーダルを表示しない
         if (currentLocation !== "飛行船" && currentModule) {
@@ -574,12 +573,15 @@ const gameContext = {
   },
   set shipState(value) {
     shipState = value;
-    updateShipStateDisplay();
   },
   get currentLocation() {
     return currentLocation;
   },
   set currentLocation(value) {
+    // 場所が変わる前にpreviousLocationを更新
+    if (currentLocation !== value) {
+      previousLocation = currentLocation;
+    }
     currentLocation = value;
     updateMainContent(); // 場所が変わったらメインコンテンツを更新
 
@@ -590,6 +592,12 @@ const gameContext = {
       currentLocation === "無人島"
     ) {
       gameContext.shipState = "離船中"; // ここで船の状態を「離船中」に設定
+    } else if (currentLocation === "造船所") {
+      // 造船所の場合
+      gameContext.shipState = "停泊中"; // 造船所では停泊中に設定
+    } else if (currentLocation === "飛行船") {
+      // 飛行船に戻った場合
+      gameContext.shipState = "離船中"; // 飛行船では離船中に設定
     }
 
     // 街のモジュールにcalculatePricesForVisit関数があれば呼び出す
@@ -598,14 +606,48 @@ const gameContext = {
       currentModule = SmallTown;
     } else if (currentLocation === "大きな街") {
       currentModule = LargeTown;
+    } else if (currentLocation === "造船所") {
+      currentModule = Shipyard; // 造船所の場合
     }
 
     if (
       currentModule &&
       typeof currentModule.calculatePricesForVisit === "function"
     ) {
-      currentModule.calculatePricesForVisit(); // 引数なしで呼び出し、ランダムな倍率を適用
+      let smallTownPrices = null;
+      // 造船所に行く場合、または造船所から小さな街に戻る場合
+      if (currentLocation === "造船所") {
+        // 造船所に行く場合は、現在の場所が小さな街ならその価格を渡す
+        if (previousLocation === "小さな街") {
+          smallTownPrices = SmallTown.getCurrentVisitPrices();
+        }
+        currentModule.calculatePricesForVisit(
+          null,
+          gameContext,
+          smallTownPrices
+        );
+      } else if (
+        currentLocation === "小さな街" &&
+        previousLocation === "飛行船"
+      ) {
+        // 飛行船から小さな街に停泊した場合のみ、小さな街の価格を再計算
+        SmallTown.calculatePricesForVisit(null, gameContext); // gameContextを渡す
+      } else if (
+        currentLocation === "大きな街" &&
+        previousLocation === "飛行船"
+      ) {
+        // 飛行船から大きな街に停泊した場合のみ、大きな街の価格を再計算
+        LargeTown.calculatePricesForVisit(); // LargeTownの価格をランダムに更新
+      }
+      // その他の場所への移動では価格を更新しない
     }
+  },
+  // previousLocation のゲッターとセッターを追加
+  get previousLocation() {
+    return previousLocation;
+  },
+  set previousLocation(value) {
+    previousLocation = value;
   },
   get bagInventory() {
     return InventoryManager.inventoryData.bagInventory;
@@ -622,7 +664,6 @@ const gameContext = {
   updateHealthDisplay: updateHealthDisplay,
   updateFuelDisplay: updateFuelDisplay,
   updateMoneyDisplay: updateMoneyDisplay,
-  updateShipStateDisplay: updateShipStateDisplay,
   advanceGameTime: advanceGameTime,
   startIslandExploration: startIslandExploration,
   startAirshipExploration: startAirshipExploration,
@@ -664,6 +705,9 @@ function updateMainContent() {
     currentModule = SmallTown;
   } else if (currentLocation === "無人島") {
     currentModule = Island;
+  } else if (currentLocation === "造船所") {
+    // 新しく追加: 造船所
+    currentModule = Shipyard;
   } else {
     // 未定義の場所の場合のフォールバック
     console.error("Unknown location:", currentLocation);
@@ -696,10 +740,12 @@ function updateMainContent() {
     mainContentTitle.appendChild(infoButton);
   }
 
-  mainContentText.innerHTML = currentModule.getMessage();
+  // currentModule.getMessage() に gameContext を渡すように修正
+  mainContentText.innerHTML = currentModule.getMessage(gameContext);
 
   // 行動セクションを動的に生成
-  const actions = currentModule.getActions();
+  // currentModule.getActions() に gameContext を渡すように修正
+  const actions = currentModule.getActions(gameContext);
   actions.forEach((section) => {
     // サブタイトルがnullでない場合のみh4要素を作成
     if (section.subtitle !== null) {

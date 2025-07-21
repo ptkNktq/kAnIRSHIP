@@ -1,10 +1,10 @@
 // location/smallTown.js
 
+export const minPriceMultiplierSmallTown = 0.95; // exportを追加
+export const maxPriceMultiplierSmallTown = 1.3; // exportを追加
+
 const baseRepairCostPerHealth = 50;
 const baseFuelCostPerUnit = 20;
-
-const minPriceMultiplierSmallTown = 0.95;
-const maxPriceMultiplierSmallTown = 1.3;
 
 // 現在の訪問での価格を保持する変数
 let currentVisitPrices = {
@@ -39,8 +39,12 @@ export function getPricesInfo() {
  * 街に到着した時点で価格を計算し、設定する関数
  * この関数はgame.jsから呼び出されることを想定しています。
  * @param {number|null} fixedMultiplier - 固定の価格倍率。指定されない場合はランダムな倍率を使用。
+ * @param {Object|null} gameContext - ゲームのコンテキスト (現在は使用しないが、引数として受け取る)
  */
-export function calculatePricesForVisit(fixedMultiplier = null) {
+export function calculatePricesForVisit(
+  fixedMultiplier = null,
+  gameContext = null
+) {
   let priceMultiplier;
   if (fixedMultiplier !== null) {
     priceMultiplier = fixedMultiplier;
@@ -66,6 +70,14 @@ export function calculatePricesForVisit(fixedMultiplier = null) {
   );
 }
 
+/**
+ * 現在の訪問価格を返す関数
+ * @returns {Object} currentVisitPricesオブジェクト
+ */
+export function getCurrentVisitPrices() {
+  return currentVisitPrices;
+}
+
 export function getActions() {
   return [
     {
@@ -77,28 +89,14 @@ export function getActions() {
           className: "choice-button-default",
         },
         {
-          text: "お店に行く",
+          text: "お店に行く (10分)", // 時間を追加
           actionName: "goToShop",
           className: "choice-button-default",
         },
-      ],
-    },
-    {
-      subtitle: "飛行船",
-      buttons: [
         {
-          text: "修理する",
-          actionName: "repairShip",
+          text: "造船所に行く (10分)", // 時間を追加
+          actionName: "goToShipyard",
           className: "choice-button-default",
-          disabledCondition: (context) =>
-            context.currentHealth === context.maxHealth,
-        },
-        {
-          text: "燃料補給する",
-          actionName: "refuel",
-          className: "choice-button-default",
-          disabledCondition: (context) =>
-            context.currentFuel === context.maxFuel,
         },
       ],
     },
@@ -128,6 +126,9 @@ export function executeAction(actionName, gameContext) {
       break;
     case "strollTown":
       strollTown(gameContext);
+      break;
+    case "goToShipyard":
+      goToShipyard(gameContext);
       break;
     case "returnToAirship":
       returnToAirship(gameContext);
@@ -197,6 +198,7 @@ function refuel(gameContext) {
  * @param {Object} gameContext - ゲームのコンテキスト
  */
 function goToShop(gameContext) {
+  gameContext.advanceGameTime(10); // 10分経過
   gameContext.displayMessage(
     "お店に入りました。何を買いますか？（この機能はまだ開発中です）"
   );
@@ -208,6 +210,17 @@ function goToShop(gameContext) {
  */
 function strollTown(gameContext) {
   gameContext.startStrollExploration(30);
+}
+
+/**
+ * 造船所へ行く（仮の処理）
+ * @param {Object} gameContext - ゲームのコンテキスト
+ */
+function goToShipyard(gameContext) {
+  gameContext.advanceGameTime(10); // 10分経過
+  gameContext.previousLocation = gameContext.currentLocation; // 造船所に行く前に現在の場所を保存
+  gameContext.displayMessage("造船所に到着しました。");
+  gameContext.currentLocation = "造船所"; // 場所を造船所に変更
 }
 
 /**
