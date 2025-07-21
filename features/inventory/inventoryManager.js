@@ -1,11 +1,14 @@
 // features/inventory/inventoryManager.js
 
+import { allItemDefinitions } from "./item.js"; // item.jsからアイテム定義をインポート
+
 let inventoryData = {
   bagInventory: [],
   shipContainerInventory: [],
-  allItemDefinitions: [], // この定義はgame.jsから渡されることを想定
+  allItemDefinitions: [], // ここは初期化時に設定されるため、空の配列にしておく
   maxItemTypesInBag: 0, // initInventoryで設定される
   maxItemTypesInShipContainer: 49, // 船体コンテナは常に7x7とする
+  initialUsableShipContainerSlots: 16, // 新しく追加: 船体コンテナの初期で使えるスロット数（4x4=16を想定）
 };
 
 let _inventoryGridElement;
@@ -47,108 +50,30 @@ export function initInventory(
   // カバンの最大アイテム種類数（使えるスロット数）を設定
   inventoryData.maxItemTypesInBag = initialUsableBagSlots;
 
-  // 仮のアイテム定義（実際はgame.jsから渡されるか、別のデータファイルからロードされる）
-  inventoryData.allItemDefinitions = [
-    {
-      id: "fuel_tank",
-      name: "燃料タンク",
-      description: "飛行船の燃料を補給する。",
-      type: "consumable",
-    },
-    {
-      id: "repair_kit",
-      name: "修理キット",
-      description: "飛行船の損傷を修理する。",
-      type: "consumable",
-    },
-    {
-      id: "scrap_metal",
-      name: "スクラップ金属",
-      description: "ガラクタの金属。何かに使えるかも？",
-      type: "material",
-    },
-    {
-      id: "rare_gem",
-      name: "レアな宝石",
-      description: "非常に珍しい輝く宝石。高値で売れる。",
-      type: "valuable",
-    },
-    {
-      id: "compass",
-      name: "方位磁石",
-      description: "方角を示す。",
-      type: "tool",
-    },
-    {
-      id: "map",
-      name: "地図",
-      description: "周辺の地形が描かれた地図。",
-      type: "tool",
-    },
-    {
-      id: "old_book",
-      name: "古びた本",
-      description: "読めない文字で書かれている。",
-      type: "misc",
-    },
-    {
-      id: "empty_bottle",
-      name: "空き瓶",
-      description: "何かに使えるかもしれない空の瓶。",
-      type: "misc",
-    },
-    {
-      id: "rope",
-      name: "ロープ",
-      description: "丈夫なロープ。",
-      type: "material",
-    },
-    {
-      id: "cloth",
-      name: "布",
-      description: "使い古された布。",
-      type: "material",
-    },
-    { id: "gear", name: "歯車", description: "機械の部品。", type: "material" },
-    {
-      id: "spring",
-      name: "バネ",
-      description: "弾力性のあるバネ。",
-      type: "material",
-    },
-    {
-      id: "wire",
-      name: "ワイヤー",
-      description: "細い金属線。",
-      type: "material",
-    },
-    {
-      id: "battery",
-      name: "バッテリー",
-      description: "電力を供給する。",
-      type: "consumable",
-    },
-    {
-      id: "medicine",
-      name: "薬",
-      description: "体力を回復する。",
-      type: "consumable",
-    },
-    {
-      id: "food_ration",
-      name: "食料",
-      description: "空腹を満たす。",
-      type: "consumable",
-    },
-    {
-      id: "water_bottle",
-      name: "水筒",
-      description: "水を運ぶための容器。",
-      type: "consumable",
-    },
-  ];
+  // item.jsからインポートしたアイテム定義をセット
+  inventoryData.allItemDefinitions = allItemDefinitions;
 
-  // 初期インベントリの描画
+  // 初期アイテムを追加
+  const fuelTankDef = inventoryData.allItemDefinitions.find(
+    (item) => item.id === "fuel_tank"
+  );
+  if (fuelTankDef) {
+    addItemToBag(fuelTankDef, 2);
+  }
+  const repairKitDef = inventoryData.allItemDefinitions.find(
+    (item) => item.id === "repair_kit"
+  );
+  if (repairKitDef) {
+    addItemToBag(repairKitDef, 2);
+  }
+  const mapDef = inventoryData.allItemDefinitions.find(
+    (item) => item.id === "map"
+  );
+  if (mapDef) {
+    addItemToBag(mapDef, 1);
+  }
+
+  // 初期アイテム追加後にインベントリの描画を行う
   renderInventoryGrid();
   renderAvailableItems();
 }
@@ -189,15 +114,22 @@ export function isInventoryOpen() {
 export function addItemToBag(itemDef, quantity) {
   // 既存のアイテムを更新
   const existingItem = inventoryData.bagInventory.find(
-    (item) => item.id === itemDef.id
-  );
+    (item) => item && item.id === itemDef.id
+  ); // itemがnull/undefinedでないことを確認
   if (existingItem) {
-    existingItem.quantity += quantity;
-    _displayMessageCallback(
-      `${itemDef.name}を${quantity}個手に入れた！(合計: ${existingItem.quantity})`
-    );
-    renderInventoryGrid();
-    return true;
+    // スタック制限を超えないかチェック
+    if (existingItem.quantity + quantity <= itemDef.stackLimit) {
+      existingItem.quantity += quantity;
+      _displayMessageCallback(
+        `${itemDef.name}を${quantity}個手に入れた！(合計: ${existingItem.quantity})`
+      );
+      return true;
+    } else {
+      _displayMessageCallback(
+        `${itemDef.name}のスタック制限を超えてしまう！(最大: ${itemDef.stackLimit})`
+      );
+      return false;
+    }
   }
 
   // 新しいアイテムを追加
@@ -218,7 +150,6 @@ export function addItemToBag(itemDef, quantity) {
       quantity: quantity,
     };
     _displayMessageCallback(`${itemDef.name}を${quantity}個手に入れた！`);
-    renderInventoryGrid();
     return true;
   } else {
     _displayMessageCallback("カバンがいっぱいで、これ以上アイテムを持てない！");
@@ -234,25 +165,34 @@ export function addItemToBag(itemDef, quantity) {
  */
 export function addItemToShipContainer(itemDef, quantity) {
   const existingItem = inventoryData.shipContainerInventory.find(
-    (item) => item.id === itemDef.id
+    (item) => item && item.id === itemDef.id
   );
   if (existingItem) {
-    existingItem.quantity += quantity;
-    _displayMessageCallback(
-      `${itemDef.name}を${quantity}個船体コンテナに入れた！(合計: ${existingItem.quantity})`
-    );
-    renderInventoryGrid();
-    return true;
+    // スタック制限を超えないかチェック
+    if (existingItem.quantity + quantity <= itemDef.stackLimit) {
+      existingItem.quantity += quantity;
+      _displayMessageCallback(
+        `${itemDef.name}を${quantity}個船体コンテナに入れた！(合計: ${existingItem.quantity})`
+      );
+      return true;
+    } else {
+      _displayMessageCallback(
+        `${item.name}のスタック制限を超えてしまう！(最大: ${item.stackLimit})`
+      );
+      return false;
+    }
   }
 
-  const emptySlotIndex = inventoryData.shipContainerInventory.findIndex(
-    (item) => item === null || item === undefined
-  );
+  // 船体コンテナの空きスロットを探す
+  let emptySlotIndex = -1;
+  for (let i = 0; i < inventoryData.maxItemTypesInShipContainer; i++) {
+    if (!inventoryData.shipContainerInventory[i]) {
+      emptySlotIndex = i;
+      break;
+    }
+  }
 
-  if (
-    emptySlotIndex !== -1 &&
-    emptySlotIndex < inventoryData.maxItemTypesInShipContainer
-  ) {
+  if (emptySlotIndex !== -1) {
     inventoryData.shipContainerInventory[emptySlotIndex] = {
       ...itemDef,
       quantity: quantity,
@@ -260,20 +200,6 @@ export function addItemToShipContainer(itemDef, quantity) {
     _displayMessageCallback(
       `${itemDef.name}を${quantity}個船体コンテナに入れた！`
     );
-    renderInventoryGrid();
-    return true;
-  } else if (
-    inventoryData.shipContainerInventory.length <
-    inventoryData.maxItemTypesInShipContainer
-  ) {
-    inventoryData.shipContainerInventory.push({
-      ...itemDef,
-      quantity: quantity,
-    });
-    _displayMessageCallback(
-      `${itemDef.name}を${quantity}個船体コンテナに入れた！`
-    );
-    renderInventoryGrid();
     return true;
   } else {
     _displayMessageCallback(
@@ -363,30 +289,47 @@ function renderInventoryGrid() {
   // グリッドの列数を設定
   _inventoryGridElement.style.gridTemplateColumns = `repeat(${_totalBagCols}, 1fr)`;
 
-  const totalCells = _totalBagRows * _totalBagCols;
-  const usableRows = Math.floor(_initialUsableBagSlots / _totalBagCols); // 使える行数（4x4なら4）
-  const usableCols = _initialUsableBagSlots % _totalBagCols; // 使える列数（4x4なら4）
+  // ここは常に船体コンテナを描画するロジック
+  // _inventoryGridElement.id === "inventoryGrid" は、この関数が船体コンテナのDOM要素を操作していることを示唆
+  let inventoryToRender = inventoryData.shipContainerInventory;
+  let maxSlots = inventoryData.maxItemTypesInShipContainer;
 
-  for (let i = 0; i < totalCells; i++) {
+  for (let i = 0; i < maxSlots; i++) {
     const cell = document.createElement("div");
     cell.classList.add("inventory-cell");
 
-    const row = Math.floor(i / _totalBagCols);
+    // 船体コンテナの初期制約を適用 (4x4の範囲)
+    const row = Math.floor(i / _totalBagCols); // _totalBagCols (7) を使って列を計算
     const col = i % _totalBagCols;
 
-    // 4x4の範囲内かどうかで usable-cell クラスを適用
-    // rowが4未満 AND colが4未満の場合にusableとする
     if (row < 4 && col < 4) {
-      // ここで4x4の範囲を指定したわ！
+      // 4x4の範囲内であればusable
       cell.dataset.usable = "true";
     } else {
       cell.classList.add("unusable-cell");
       cell.dataset.usable = "false";
     }
 
-    const item = inventoryData.bagInventory[i];
+    const item = inventoryToRender[i]; // 描画するインベントリからアイテムを取得
     if (item) {
-      cell.textContent = `${item.name} x${item.quantity}`;
+      // item.imageUrl が存在すれば画像を表示、なければテキスト
+      if (item.imageUrl) {
+        const img = document.createElement("img");
+        img.src = item.imageUrl;
+        img.alt = item.name;
+        img.classList.add("item-image");
+        cell.appendChild(img);
+      }
+      const nameText = document.createElement("span");
+      nameText.textContent = `${item.name} (${item.size.width}x${item.size.height})`; // サイズを追加
+      nameText.classList.add("item-name");
+      cell.appendChild(nameText);
+
+      const quantityText = document.createElement("span");
+      quantityText.textContent = `x${item.quantity}`;
+      quantityText.classList.add("item-quantity");
+      cell.appendChild(quantityText);
+
       cell.dataset.itemId = item.id; // アイテムIDをデータ属性として保存
       cell.dataset.itemQuantity = item.quantity;
       cell.dataset.itemType = item.type; // アイテムタイプをデータ属性として保存
@@ -421,7 +364,7 @@ function renderInventoryGrid() {
 }
 
 /**
- * 利用可能なアイテムリストを描画する
+ * 利用可能なアイテムリスト（カバン）を描画する
  */
 function renderAvailableItems() {
   if (!_availableItemsListElement) {
@@ -430,15 +373,28 @@ function renderAvailableItems() {
   }
   _availableItemsListElement.innerHTML = ""; // 既存のアイテムをクリア
 
-  inventoryData.allItemDefinitions.forEach((itemDef) => {
-    const listItem = document.createElement("li");
-    listItem.textContent = itemDef.name;
-    listItem.dataset.itemId = itemDef.id; // データ属性にIDを保存
+  // カバンの中身を描画
+  inventoryData.bagInventory.forEach((item) => {
+    // bagInventoryを参照
+    if (item) {
+      // nullやundefinedの要素はスキップ
+      const listItem = document.createElement("li");
+      listItem.classList.add("inventory-list-item"); // スタイル用のクラスを追加
 
-    // クリックでアイテムをカバンに追加する機能（テスト用）
-    listItem.addEventListener("click", () => {
-      addItemToBag(itemDef, 1); // 1個追加
-    });
-    _availableItemsListElement.appendChild(listItem);
+      const itemText = document.createElement("span");
+      itemText.textContent = `${item.name} (${item.size.width}x${item.size.height}) x${item.quantity}`; // サイズを追加
+      listItem.appendChild(itemText);
+
+      listItem.dataset.itemId = item.id; // データ属性にIDを保存
+
+      // クリックでアイテム情報を表示する機能
+      listItem.addEventListener("click", () => {
+        _displayMessageCallback(
+          `${item.name} (${item.description}) - 数量: ${item.quantity}`
+        );
+        // ここでアイテム使用などの追加アクションを実装することも可能
+      });
+      _availableItemsListElement.appendChild(listItem);
+    }
   });
 }
