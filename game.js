@@ -9,21 +9,24 @@ import * as Island from "./location/island.js";
 import * as InventoryManager from "./features/inventory/inventoryManager.js";
 // 天候マネージャーモジュールをインポート
 import * as WeatherManager from "./features/weather/weatherManager.js";
-import { weatherIconsSvg } from "./resources/weathers.svg.js"; // 天気SVGをインポート
+import { weatherIconsSvg } from "./resources/weathers.svg.js"; // weatherManagerに渡すためにインポート
 
 // DOM要素の変数を宣言（初期値はnull）
-let inventoryContainer;
-let inventoryGrid;
+let inventoryContainer; // グローバルで宣言
+let inventoryGrid; // グローバルで宣言
 let modalOverlay;
-let inventoryModalContentWrapper;
+let inventoryModalContentWrapper; // グローバルで宣言
 let itemListArea;
-let availableItemsList;
-let itemListTitle;
+let availableItemsList; // グローバルで宣言
+let itemListTitle; // グローバルで宣言
 let infoModalContentWrapper;
 let infoModalTitle;
 let infoModalText;
-let infoModalPrices;
+let infoModalPrices; // 新しく追加：価格表示用の要素
 let gameTimeDisplay;
+let weatherDisplay;
+let weatherIconContainer;
+let weatherIcons; // オブジェクトとして後で初期化 (WeatherManagerで管理される)
 let healthValueDisplay;
 let healthBar;
 let fuelValueDisplay;
@@ -39,22 +42,22 @@ let mainContentTitle;
 // ゲームの状態変数
 const maxHealth = 20;
 let currentHealth = maxHealth;
-const maxFuel = 100;
-let currentFuel = maxFuel;
-let currentMoney = 100000;
-let shipState = "離船中";
-let currentLocation = "小さな街";
+const maxFuel = 100; // 新しく追加: 燃料の最大値
+let currentFuel = maxFuel; // 新しく追加: 燃料の初期値を最大値に設定
+let currentMoney = 100000; // お金の初期値を10万に変更
+let shipState = "離船中"; // 初期状態を「離船中」に設定
+let currentLocation = "小さな街"; // 現在の場所を管理。初期値は「小さな街」に固定
 
 // ゲーム内時間変数
-let gameHour = 8;
-let gameMinute = 0;
-let gameDay = 1;
+let gameHour = 8; // 初期時間: 午前8時
+let gameMinute = 0; // 新しく追加: 分単位
+let gameDay = 1; // 初期日: 1日目
 
 /**
  * 体力表示を更新する関数
  */
 function updateHealthDisplay() {
-  healthValueDisplay.textContent = `${currentHealth} / ${maxHealth}`;
+  healthValueDisplay.textContent = `${currentHealth} / ${maxHealth}`; // 数値表示を追加
   const healthPercentage = (currentHealth / maxHealth) * 100;
   healthBar.style.width = `${healthPercentage}%`;
 
@@ -72,7 +75,7 @@ function updateHealthDisplay() {
  * 燃料表示を更新する関数
  */
 function updateFuelDisplay() {
-  fuelValueDisplay.textContent = `${currentFuel} / ${maxFuel}`;
+  fuelValueDisplay.textContent = `${currentFuel} / ${maxFuel}`; // 数値表示を追加
   const fuelPercentage = (currentFuel / maxFuel) * 100;
   fuelBar.style.width = `${fuelPercentage}%`;
 
@@ -215,9 +218,23 @@ window.onload = () => {
   infoModalContentWrapper = document.getElementById("infoModalContentWrapper");
   infoModalTitle = document.getElementById("infoModalTitle");
   infoModalText = document.getElementById("infoModalText");
-  infoModalPrices = document.getElementById("infoModalPrices");
+  infoModalPrices = document.getElementById("infoModalPrices"); // 新しく取得
   gameTimeDisplay = document.getElementById("gameTimeDisplay");
-  // weatherDisplayとweatherIconContainerはWeatherManagerに渡す
+  weatherDisplay = document.getElementById("weatherDisplay");
+  weatherIconContainer = document.querySelector(".weather-icon-container");
+
+  // WeatherManagerを初期化し、必要なDOM要素とSVGアイコンを渡す
+  WeatherManager.initWeather(
+    {
+      weatherDisplay,
+      weatherIconContainer,
+    },
+    weatherIconsSvg // SVGアイコンオブジェクトを渡す
+  );
+
+  // WeatherManagerからweatherIconsの参照を取得
+  // weatherIcons = WeatherManager.getWeatherIcons(); // WeatherManagerで管理されるため、直接アクセスしない
+
   healthValueDisplay = document.getElementById("healthValue");
   healthBar = document.getElementById("healthBar");
   fuelValueDisplay = document.getElementById("fuelValue");
@@ -244,15 +261,6 @@ window.onload = () => {
     7,
     7
   ); // 4x4=16スロットが初期で使える、表示は7x7グリッド
-
-  // WeatherManagerを初期化し、必要なDOM要素とSVGアイコンを渡す
-  WeatherManager.initWeather(
-    {
-      weatherDisplay: document.getElementById("weatherDisplay"),
-      weatherIconContainer: document.getElementById("weatherIconContainer"),
-    },
-    weatherIconsSvg
-  );
 
   // ゲーム開始メッセージを最初に表示
   displayMessage("ゲームが開始されました！");
@@ -289,8 +297,18 @@ window.onload = () => {
           // 情報モーダルが開いている場合はEを押しても何もしない（ショートカット無効）
           event.preventDefault();
         }
+      } else if (event.key === "i") {
+        // 'i'キーが押された場合
+        if (isInfoModalCurrentlyOpen) {
+          // 情報モーダルが開いている場合はiで閉じる
+          event.preventDefault();
+          toggleModal(null); // 全てのモーダルを閉じる
+        } else {
+          // 他のモーダルが開いていて、情報モーダルが開いていない場合は何もしない
+          event.preventDefault();
+        }
       } else {
-        // E以外のキーが押された場合は、全てのショートカットを無効にする
+        // E, I以外のキーが押された場合は、全てのショートカットを無効にする
         event.preventDefault();
       }
     } else {
@@ -298,6 +316,24 @@ window.onload = () => {
       if (event.key === "e") {
         event.preventDefault();
         toggleModal("inventory"); // インベントリを開く
+      } else if (event.key === "i") {
+        // 'i'キーが押された場合
+        event.preventDefault();
+        // 現在の場所に基づいて適切なロケーションモジュールを選択
+        let currentModule;
+        if (currentLocation === "飛行船") {
+          currentModule = Airship;
+        } else if (currentLocation === "大きな街") {
+          currentModule = LargeTown;
+        } else if (currentLocation === "小さな街") {
+          currentModule = SmallTown;
+        } else if (currentLocation === "無人島") {
+          currentModule = Island;
+        }
+        // 飛行船の場所では情報モーダルを表示しない
+        if (currentLocation !== "飛行船" && currentModule) {
+          toggleModal("info", currentModule); // 情報モーダルを開く
+        }
       }
       // 他のキーは通常通り動作させる（event.preventDefault()を呼ばない）
     }
@@ -330,7 +366,7 @@ window.onload = () => {
  * @param {number} durationMinutes - 探索にかかるゲーム分数
  */
 function startIslandExploration(durationMinutes) {
-  displayMessage(`無人島を探索しています... (${durationMinutes}分)`);
+  displayMessage(`無人島を探索しています... (${durationMinutes}分)`); // メッセージに時間を追加したわ！
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -410,7 +446,7 @@ function startAirshipExploration(
 
   displayMessage(
     `飛行船での探索を開始しました。(${durationMinutes}分間の航行)`
-  );
+  ); // メッセージに時間を追加したわ！
   currentFuel -= initialFuelCost; // 初期燃料を消費
   updateFuelDisplay();
 
@@ -462,7 +498,7 @@ function startAirshipExploration(
 function startStrollExploration(durationMinutes) {
   displayMessage(
     `街を散策しています。何か新しい発見があるかもしれません... (${durationMinutes}分)`
-  );
+  ); // メッセージに時間を追加したわ！
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -592,7 +628,7 @@ const gameContext = {
   advanceGameTime: advanceGameTime,
   startIslandExploration: startIslandExploration,
   startAirshipExploration: startAirshipExploration,
-  startStrollExploration: startStrollExploration,
+  startStrollExploration: startStrollExploration, // 新しく追加: 散策探索開始関数
   getRandomTownType: getRandomTownType,
   updateMainContent: updateMainContent, // 循環参照になるが、現状は必要
   disableAllButtons: () => {
@@ -671,7 +707,7 @@ function updateMainContent() {
     if (section.subtitle !== null) {
       const sectionTitle = document.createElement("h4");
       sectionTitle.textContent = section.subtitle;
-      sectionTitle.classList.add("action-section-title");
+      sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
       choicesContainer.appendChild(sectionTitle);
     }
 
@@ -680,7 +716,7 @@ function updateMainContent() {
     if (section.subtitle === null) {
       buttonsWrapper.classList.add("no-subtitle-buttons-wrapper");
     } else {
-      buttonsWrapper.classList.add("action-buttons-wrapper");
+      buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
     }
 
     choicesContainer.appendChild(buttonsWrapper);
