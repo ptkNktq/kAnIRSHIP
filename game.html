@@ -1,4 +1,3 @@
-<!-- game.html -->
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -7,6 +6,8 @@
     <title>ゲーム画面</title>
     <!-- 外部CSSファイルを読み込む -->
     <link rel="stylesheet" href="style.css" />
+    <!-- location.cssを新しく読み込むわよ！ -->
+    <link rel="stylesheet" href="location/location.css" />
   </head>
   <body>
     <!-- 左側のUI要素をまとめるコンテナ -->
@@ -17,81 +18,13 @@
         <div id="skyBackground" class="sky-background"></div>
 
         <!-- ドット絵風飛行船の表示エリア -->
-        <div class="airship-container">
-          <svg
-            class="airship-svg"
-            viewBox="0 0 40 30"
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <!-- 飛行船本体 (バルーン部分) - 右向きで先頭が丸く、後ろが少し角丸に、灰色系に -->
-            <!-- ベースカラー: #696969 (濃い灰色) -->
-            <rect x="6" y="8" width="31" height="10" fill="#696969" />
-            <!-- メインボディ (幅+3px) -->
-            <!-- 前方 (右) の丸み -->
-            <rect x="37" y="9" width="2" height="8" fill="#696969" />
-            <!-- x+3px -->
-            <rect x="39" y="10" width="1" height="6" fill="#696969" />
-            <!-- x+3px -->
-            <!-- 後方 (左) の角丸 -->
-            <rect x="4" y="9" width="2" height="8" fill="#696969" />
-            <rect x="3" y="10" width="1" height="6" fill="#696969" />
-
-            <!-- ハイライトカラー: #778899 (明るい灰色/スレートグレー) -->
-            <rect x="7" y="9" width="29" height="8" fill="#778899" />
-            <!-- メインハイライト (幅+3px) -->
-            <!-- 前方 (右) のハイライト -->
-            <rect x="36" y="10" width="2" height="6" fill="#778899" />
-            <!-- x+3px -->
-            <!-- 後方 (左) のハイライト -->
-            <rect x="5" y="10" width="2" height="6" fill="#778899" />
-
-            <!-- ゴンドラ部分 - 半月っぽい木製の船に (上下反転、空気部分より少し離す) -->
-            <!-- 木製の色: #8B4513 (濃い木の色), #A0522D (明るい木の色) -->
-            <!-- 下から上へ積み重ねて半月（逆さ）を表現 -->
-            <rect x="10" y="24" width="20" height="2" fill="#8B4513" />
-            <rect x="9" y="23" width="22" height="1" fill="#8B4513" />
-            <rect x="8" y="22" width="24" height="1" fill="#8B4513" />
-            <rect x="7" y="21" width="26" height="1" fill="#8B4513" />
-            <rect x="8" y="22" width="24" height="1" fill="#A0522D" />
-
-            <!-- プロペラ (左側に1つだけ配置) -->
-            <rect x="5" y="23" width="2" height="2" fill="#404040" />
-
-            <!-- 紐 (バルーンとゴンドラをつなぐ) - 位置調整 -->
-            <!-- バルーンの底 (y=18) から船のトップ (y=21) までを繋ぐ -->
-            <rect x="14" y="18" width="1" height="3" fill="#556B2F" />
-            <rect x="25" y="18" width="1" height="3" fill="#556B2F" />
-
-            <!-- 舵輪 (後方、船の上、バルーンとの間に配置) -->
-            <!-- サイズを小さくし、紐のすぐ後ろに1px開けて、バルーンと接しないように調整 -->
-            <!-- 垂直のブレード部分 -->
-            <rect x="12" y="19" width="1" height="2" fill="#5C4033" />
-            <!-- 水平のハンドル部分 -->
-            <rect x="11" y="20" width="2" height="1" fill="#5C4033" />
-
-            <!-- 船首の棒 (前方に追加) -->
-            <rect x="33" y="20" width="4" height="1" fill="#5C4033" />
-          </svg>
+        <div class="airship-container" id="airshipContainer">
+          <!-- 飛行船SVGはJavaScriptでここに挿入されるよ -->
         </div>
 
         <!-- ドット絵風バッグアイコン -->
         <div id="bagIcon" class="bag-icon-container">
-          <svg class="bag-icon-svg" viewBox="0 0 24 24">
-            <!-- Bag body -->
-            <rect x="5" y="9" width="14" height="10" fill="#8B4513" />
-            <rect x="4" y="10" width="1" height="8" fill="#8B4513" />
-            <rect x="19" y="10" width="1" height="8" fill="#8B4513" />
-
-            <!-- Bag flap -->
-            <rect x="5" y="7" width="14" height="2" fill="#A0522D" />
-            <rect x="4" y="8" width="1" height="1" fill="#A0522D" />
-            <rect x="19" y="8" width="1" height="1" fill="#A0522D" />
-
-            <!-- Handle -->
-            <rect x="9" y="4" width="6" height="3" fill="#5C4033" />
-            <rect x="8" y="5" width="1" height="1" fill="#5C4033" />
-            <rect x="15" y="5" width="1" height="1" fill="#5C4033" />
-          </svg>
+          <!-- バッグアイコンSVGはJavaScriptでここに挿入されるよ -->
         </div>
       </div>
 
@@ -105,69 +38,8 @@
         <div class="game-info-item">
           <span class="game-info-label">天候:</span>
           <span id="weatherDisplay"></span>
-          <div class="weather-icon-container">
-            <!-- 晴れアイコン -->
-            <svg id="icon-sunny" class="weather-icon-svg" viewBox="0 0 16 16">
-              <rect x="7" y="0" width="2" height="2" fill="#FFD700" />
-              <rect x="7" y="14" width="2" height="2" fill="#FFD700" />
-              <rect x="0" y="7" width="2" height="2" fill="#FFD700" />
-              <rect x="14" y="7" width="2" height="2" fill="#FFD700" />
-              <rect x="3" y="3" width="2" height="2" fill="#FFD700" />
-              <rect x="11" y="3" width="2" height="2" fill="#FFD700" />
-              <rect x="3" y="11" width="2" height="2" fill="#FFD700" />
-              <rect x="11" y="11" width="2" height="2" fill="#FFD700" />
-              <rect x="6" y="6" width="4" height="4" fill="#FFD700" />
-            </svg>
-            <!-- 曇りアイコン -->
-            <svg id="icon-cloudy" class="weather-icon-svg" viewBox="0 0 16 16">
-              <rect x="2" y="8" width="12" height="4" fill="#CCCCCC" />
-              <rect x="4" y="6" width="8" height="2" fill="#CCCCCC" />
-              <rect x="3" y="7" width="10" height="1" fill="#CCCCCC" />
-              <rect x="5" y="5" width="6" height="1" fill="#CCCCCC" />
-            </svg>
-            <!-- 雨アイコン -->
-            <svg id="icon-rainy" class="weather-icon-svg" viewBox="0 0 16 16">
-              <rect x="2" y="8" width="12" height="4" fill="#CCCCCC" />
-              <rect x="4" y="6" width="8" height="2" fill="#CCCCCC" />
-              <rect x="3" y="7" width="10" height="1" fill="#CCCCCC" />
-              <rect x="5" y="5" width="6" height="1" fill="#CCCCCC" />
-              <rect x="4" y="13" width="1" height="2" fill="#66B2FF" />
-              <rect x="7" y="12" width="1" height="2" fill="#66B2FF" />
-              <rect x="10" y="13" width="1" height="2" fill="#66B2FF" />
-            </svg>
-            <!-- 嵐アイコン -->
-            <svg id="icon-stormy" class="weather-icon-svg" viewBox="0 0 16 16">
-              <rect x="2" y="8" width="12" height="4" fill="#999999" />
-              <rect x="4" y="6" width="8" height="2" fill="#999999" />
-              <rect x="3" y="7" width="10" height="1" fill="#999999" />
-              <rect x="5" y="5" width="6" height="1" fill="#999999" />
-              <polygon
-                points="6,12 8,12 7,15 9,15 8,13 10,13 9,16 6,16"
-                fill="#FFD700"
-              />
-              <!-- 雷 -->
-            </svg>
-            <!-- 雪だるまアイコン -->
-            <svg id="icon-snowy" class="weather-icon-svg" viewBox="0 0 16 16">
-              <!-- 下の体 -->
-              <rect x="4" y="9" width="8" height="6" fill="#FFFFFF" />
-              <rect x="3" y="10" width="10" height="4" fill="#FFFFFF" />
-              <!-- 中の体 -->
-              <rect x="5" y="5" width="6" height="5" fill="#FFFFFF" />
-              <rect x="4" y="6" width="8" height="3" fill="#FFFFFF" />
-              <!-- 頭 -->
-              <rect x="6" y="2" width="4" height="4" fill="#FFFFFF" />
-              <rect x="7" y="1" width="2" height="1" fill="#FFFFFF" />
-              <!-- 目 -->
-              <rect x="7" y="3" width="1" height="1" fill="#000000" />
-              <rect x="9" y="3" width="1" height="1" fill="#000000" />
-              <!-- 鼻 (ニンジン) -->
-              <rect x="8" y="4" width="1" height="1" fill="#FFA500" />
-              <!-- ボタン -->
-              <rect x="7" y="6" width="1" height="1" fill="#000000" />
-              <rect x="7" y="8" width="1" height="1" fill="#000000" />
-              <rect x="7" y="10" width="1" height="1" fill="#000000" />
-            </svg>
+          <div class="weather-icon-container" id="weatherIconContainer">
+            <!-- 天気アイコンSVGはJavaScriptでここに挿入されるよ -->
           </div>
         </div>
         <!-- 船の状態を追加 -->
@@ -175,6 +47,7 @@
           <span class="game-info-label">状態:</span>
           <span id="shipStateDisplay"></span>
         </div>
+        <!-- 現在地は不要なので削除するわね！ -->
         <div class="game-info-item">
           <span class="game-info-label">体力:</span>
           <!-- 体力数値表示を体力バーコンテナの中に移動 -->
@@ -201,7 +74,7 @@
     <!-- .left-ui-container の閉じタグ -->
 
     <!-- メインコンテンツエリアを追加 -->
-    <div class="main-content-area">
+    <div class="main-content-area" id="mainContentArea">
       <h3 id="mainContentTitle" class="main-content-title"></h3>
       <div id="mainContentText">
         <!-- プレースホルダテキストを削除したわ！ -->
@@ -250,10 +123,43 @@
         <h3 id="infoModalTitle" class="info-modal-title"></h3>
         <p id="infoModalText" class="info-modal-text"></p>
         <p id="infoModalPrices" class="info-modal-prices"></p>
+        <!-- 情報モーダルの閉じるボタンを追加するわよ！ -->
+        <button class="choice-button-default">閉じる</button>
       </div>
     </div>
 
     <!-- 外部JavaScriptファイルを読み込む -->
     <script type="module" src="game.js"></script>
+    <!-- リソースSVGをDOMに挿入するスクリプト -->
+    <script type="module">
+      import { airshipSvgString } from "./resources/airship.svg.js";
+      import { bagSvgString } from "./resources/bag.svg.js";
+      import { weatherIconsSvg } from "./resources/weathers.svg.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // 飛行船SVGを挿入
+        const airshipContainer = document.getElementById("airshipContainer");
+        if (airshipContainer) {
+          airshipContainer.innerHTML = airshipSvgString;
+        }
+
+        // バッグアイコンSVGを挿入
+        const bagIconContainer = document.getElementById("bagIcon");
+        if (bagIconContainer) {
+          bagIconContainer.innerHTML = bagSvgString;
+        }
+
+        // 天気アイコンSVGを挿入
+        const weatherIconContainer = document.getElementById(
+          "weatherIconContainer"
+        );
+        if (weatherIconContainer) {
+          for (const iconId in weatherIconsSvg) {
+            weatherIconContainer.innerHTML += weatherIconsSvg[iconId];
+          }
+        }
+      });
+    </script>
+    <!-- リソーステストスクリプトの読み込みを削除したわ！ -->
   </body>
 </html>
