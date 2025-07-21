@@ -88,21 +88,21 @@ export function getActions() {
       subtitle: "飛行船",
       buttons: [
         {
-          text: "船を修理する",
+          text: "修理する",
           actionName: "repairShip",
           className: "choice-button-default",
           disabledCondition: (context) =>
             context.currentHealth === context.maxHealth,
         },
         {
-          text: "燃料を補給する",
+          text: "燃料補給する",
           actionName: "refuel",
           className: "choice-button-default",
           disabledCondition: (context) =>
             context.currentFuel === context.maxFuel,
         },
         {
-          text: "飛行船を改造する",
+          text: "改造する",
           actionName: "customize",
           className: "choice-button-default",
         },

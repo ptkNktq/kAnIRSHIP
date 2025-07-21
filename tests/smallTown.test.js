@@ -24,7 +24,7 @@ console.log("--- SmallTown.js Actions Tests ---");
 test("getActions() は正しい数のセクションを返すこと", () => {
   const actions = SmallTown.getActions();
   // 新しい構成に合わせてセクション数を調整
-  console.assert(actions.length === 3, `期待値: 3, 実際: ${actions.length}`);
+  console.assert(actions.length === 2, `期待値: 2, 実際: ${actions.length}`);
 });
 
 test("getActions() は正しいサブタイトルとボタンを持つこと", () => {
@@ -36,52 +36,61 @@ test("getActions() は正しいサブタイトルとボタンを持つこと", (
     `1番目のサブタイトル: 期待値 '行動', 実際 '${actions[0].subtitle}'`
   );
   console.assert(
-    actions[0].buttons.length === 2,
-    `1番目のボタン数: 期待値 2, 実際 ${actions[0].buttons.length}`
+    actions[0].buttons.length === 3,
+    `1番目のボタン数: 期待値 3, 実際 ${actions[0].buttons.length}`
   );
   console.assert(
     actions[0].buttons[0].text === "街を散策する (30分)",
     `1番目のボタンテキスト: 期待値 '街を散策する (30分)', 実際 '${actions[0].buttons[0].text}'`
   );
   console.assert(
-    actions[0].buttons[1].text === "お店に行く",
-    `2番目のボタンテキスト: 期待値 'お店に行く', 実際 '${actions[0].buttons[1].text}'`
+    actions[0].buttons[1].text === "お店に行く (10分)",
+    `2番目のボタンテキスト: 期待値 'お店に行く (10分)', 実際 '${actions[0].buttons[1].text}'`
+  );
+  console.assert(
+    actions[0].buttons[2].text === "造船所に行く (10分)",
+    `3番目のボタンテキスト: 期待値 '造船所に行く (10分)', 実際 '${actions[0].buttons[2].text}'`
   );
 
-  // 2番目のセクション: 飛行船
+  // 2番目のセクション: サブタイトルなし
   console.assert(
-    actions[1].subtitle === "飛行船",
-    `2番目のサブタイトル: 期待値 '飛行船', 実際 '${actions[1].subtitle}'`
+    actions[1].subtitle === null,
+    `2番目のサブタイトル: 期待値 null, 実際 '${actions[1].subtitle}'`
   );
   console.assert(
-    actions[1].buttons.length === 3,
-    `2番目のボタン数: 期待値 3, 実際 ${actions[1].buttons.length}`
+    actions[1].buttons.length === 1,
+    `2番目のボタン数: 期待値 1, 実際 ${actions[1].buttons.length}`
   );
   console.assert(
-    actions[1].buttons[0].text === "船を修理する",
-    `3番目のボタンテキスト: 期待値 '船を修理する', 実際 '${actions[1].buttons[0].text}'`
+    actions[1].buttons[0].text === "飛行船に戻る",
+    `3番目のボタンテキスト: 期待値 '飛行船に戻る', 実際 '${actions[1].buttons[0].text}'`
   );
-  console.assert(
-    actions[1].buttons[1].text === "燃料を補給する",
-    `4番目のボタンテキスト: 期待値 '燃料を補給する', 実際 '${actions[1].buttons[1].text}'`
-  );
-  console.assert(
-    actions[1].buttons[2].text === "飛行船を改造する",
-    `5番目のボタンテキスト: 期待値 '飛行船を改造する', 実際 '${actions[1].buttons[2].text}'`
-  );
+});
 
-  // 3番目のセクション: サブタイトルなし (移動)
+test("calculatePricesForVisit() は価格を正しく設定すること", () => {
+  // calculatePricesForVisitを明示的に呼び出してテスト
+  SmallTown.calculatePricesForVisit(1.0); // 固定倍率でテスト
+  const pricesInfo = SmallTown.getPricesInfo();
   console.assert(
-    actions[2].subtitle === null,
-    `3番目のサブタイトル: 期待値 null, 実際 '${actions[2].subtitle}'`
+    pricesInfo.includes("現在の修理費用: 体力1あたり 50 バルク"),
+    `修理費用情報: ${pricesInfo}`
   );
   console.assert(
-    actions[2].buttons.length === 1,
-    `3番目のボタン数: 期待値 1, 実際 ${actions[2].buttons.length}`
+    pricesInfo.includes("現在の燃料費用: 燃料1ユニットあたり 20 バルク"),
+    `燃料費用情報: ${pricesInfo}`
+  );
+});
+
+test("getCurrentVisitPrices() は現在の訪問価格を返すこと", () => {
+  SmallTown.calculatePricesForVisit(1.0); // 価格を一度設定
+  const prices = SmallTown.getCurrentVisitPrices();
+  console.assert(
+    prices.repairCostPerHealth === 50,
+    `修理費用: 期待値 50, 実際 ${prices.repairCostPerHealth}`
   );
   console.assert(
-    actions[2].buttons[0].text === "飛行船に戻る",
-    `6番目のボタンテキスト: 期待値 '飛行船に戻る', 実際 '${actions[2].buttons[0].text}'`
+    prices.fuelCostPerUnit === 20,
+    `燃料費用: 期待値 20, 実際 ${prices.fuelCostPerUnit}`
   );
 });
 

@@ -1,11 +1,14 @@
 // features/inventory/inventoryManager.js
 
+import { allItemDefinitions } from "./item.js"; // item.jsからアイテム定義をインポート
+
 let inventoryData = {
   bagInventory: [],
   shipContainerInventory: [],
-  allItemDefinitions: [], // この定義はgame.jsから渡されることを想定
+  allItemDefinitions: [], // ここは初期化時に設定されるため、空の配列にしておく
   maxItemTypesInBag: 0, // initInventoryで設定される
   maxItemTypesInShipContainer: 49, // 船体コンテナは常に7x7とする
+  initialUsableShipContainerSlots: 16, // 新しく追加: 船体コンテナの初期で使えるスロット数（4x4=16を想定）
 };
 
 let _inventoryGridElement;
@@ -18,6 +21,9 @@ let _displayMessageCallback;
 let _totalBagRows = 0;
 let _totalBagCols = 0;
 let _initialUsableBagSlots = 0; // 初期で使えるスロット数
+
+// ドラッグ中のアイテム情報を保持するグローバル変数
+let draggedItemInfo = null;
 
 /**
  * インベントリシステムを初期化する
@@ -40,117 +46,49 @@ export function initInventory(
   _inventoryModalContentWrapperElement = elements.inventoryModalContentWrapper;
   _displayMessageCallback = displayMessageCallback;
 
-  _initialUsableBagSlots = initialUsableBagSlots; // この値は引き続き、使えるスロットの総数として使う
-  _totalBagRows = totalBagRows;
-  _totalBagCols = totalBagCols;
+  _totalBagRows = totalBagRows; // グリッドの総行数 (7)
+  _totalBagCols = totalBagCols; // グリッドの総列数 (7)
+
+  _initialUsableBagSlots = initialUsableBagSlots; // カバンの初期で使えるスロット数 (16)
 
   // カバンの最大アイテム種類数（使えるスロット数）を設定
   inventoryData.maxItemTypesInBag = initialUsableBagSlots;
 
-  // 仮のアイテム定義（実際はgame.jsから渡されるか、別のデータファイルからロードされる）
-  inventoryData.allItemDefinitions = [
-    {
-      id: "fuel_tank",
-      name: "燃料タンク",
-      description: "飛行船の燃料を補給する。",
-      type: "consumable",
-    },
-    {
-      id: "repair_kit",
-      name: "修理キット",
-      description: "飛行船の損傷を修理する。",
-      type: "consumable",
-    },
-    {
-      id: "scrap_metal",
-      name: "スクラップ金属",
-      description: "ガラクタの金属。何かに使えるかも？",
-      type: "material",
-    },
-    {
-      id: "rare_gem",
-      name: "レアな宝石",
-      description: "非常に珍しい輝く宝石。高値で売れる。",
-      type: "valuable",
-    },
-    {
-      id: "compass",
-      name: "方位磁石",
-      description: "方角を示す。",
-      type: "tool",
-    },
-    {
-      id: "map",
-      name: "地図",
-      description: "周辺の地形が描かれた地図。",
-      type: "tool",
-    },
-    {
-      id: "old_book",
-      name: "古びた本",
-      description: "読めない文字で書かれている。",
-      type: "misc",
-    },
-    {
-      id: "empty_bottle",
-      name: "空き瓶",
-      description: "何かに使えるかもしれない空の瓶。",
-      type: "misc",
-    },
-    {
-      id: "rope",
-      name: "ロープ",
-      description: "丈夫なロープ。",
-      type: "material",
-    },
-    {
-      id: "cloth",
-      name: "布",
-      description: "使い古された布。",
-      type: "material",
-    },
-    { id: "gear", name: "歯車", description: "機械の部品。", type: "material" },
-    {
-      id: "spring",
-      name: "バネ",
-      description: "弾力性のあるバネ。",
-      type: "material",
-    },
-    {
-      id: "wire",
-      name: "ワイヤー",
-      description: "細い金属線。",
-      type: "material",
-    },
-    {
-      id: "battery",
-      name: "バッテリー",
-      description: "電力を供給する。",
-      type: "consumable",
-    },
-    {
-      id: "medicine",
-      name: "薬",
-      description: "体力を回復する。",
-      type: "consumable",
-    },
-    {
-      id: "food_ration",
-      name: "食料",
-      description: "空腹を満たす。",
-      type: "consumable",
-    },
-    {
-      id: "water_bottle",
-      name: "水筒",
-      description: "水を運ぶための容器。",
-      type: "consumable",
-    },
-  ];
+  // item.jsからインポートしたアイテム定義をセット
+  inventoryData.allItemDefinitions = allItemDefinitions;
 
-  // 初期インベントリの描画
+  // 初期アイテムを追加（メッセージ表示を抑制）
+  const fuelTankDef = inventoryData.allItemDefinitions.find(
+    (item) => item.id === "fuel_tank"
+  );
+  if (fuelTankDef) {
+    addItemToBag(fuelTankDef, 2, true); // suppressMessageをtrueに固定
+  }
+  const repairKitDef = inventoryData.allItemDefinitions.find(
+    (item) => item.id === "repair_kit"
+  );
+  if (repairKitDef) {
+    addItemToBag(repairKitDef, 2, true); // suppressMessageをtrueに固定
+  }
+  const mapDef = inventoryData.allItemDefinitions.find(
+    (item) => item.id === "map"
+  );
+  if (mapDef) {
+    addItemToBag(mapDef, 1, true); // suppressMessageをtrueに固定
+  }
+
+  // 初期アイテム追加後にインベントリの描画を行う
   renderInventoryGrid();
   renderAvailableItems();
+
+  // ドロップターゲットイベントリスナーを設定
+  _inventoryGridElement.addEventListener("dragover", handleDragOver);
+  _inventoryGridElement.addEventListener("dragleave", handleDragLeave);
+  _inventoryGridElement.addEventListener("drop", handleDrop);
+
+  _availableItemsListElement.addEventListener("dragover", handleDragOver);
+  _availableItemsListElement.addEventListener("dragleave", handleDragLeave);
+  _availableItemsListElement.addEventListener("drop", handleDrop);
 }
 
 /**
@@ -184,20 +122,34 @@ export function isInventoryOpen() {
  * カバンにアイテムを追加する
  * @param {Object} itemDef - アイテム定義
  * @param {number} quantity - 数量
+ * @param {boolean} [suppressMessage=false] - メッセージ表示を抑制するかどうか
  * @returns {boolean} - 追加に成功したかどうか
  */
-export function addItemToBag(itemDef, quantity) {
+export function addItemToBag(itemDef, quantity, suppressMessage = false) {
   // 既存のアイテムを更新
   const existingItem = inventoryData.bagInventory.find(
-    (item) => item.id === itemDef.id
-  );
+    (item) => item && item.id === itemDef.id
+  ); // itemがnull/undefinedでないことを確認
   if (existingItem) {
-    existingItem.quantity += quantity;
-    _displayMessageCallback(
-      `${itemDef.name}を${quantity}個手に入れた！(合計: ${existingItem.quantity})`
-    );
-    renderInventoryGrid();
-    return true;
+    // スタック制限を超えないかチェック
+    if (existingItem.quantity + quantity <= itemDef.stackLimit) {
+      existingItem.quantity += quantity;
+      if (!suppressMessage) {
+        // メッセージ抑制がtrueでない場合のみ表示
+        _displayMessageCallback(
+          `${itemDef.name}を${quantity}個手に入れた！(合計: ${existingItem.quantity})`
+        );
+      }
+      return true;
+    } else {
+      if (!suppressMessage) {
+        // メッセージ抑制がtrueでない場合のみ表示
+        _displayMessageCallback(
+          `${itemDef.name}のスタック制限を超えてしまう！(最大: ${itemDef.stackLimit})`
+        );
+      }
+      return false;
+    }
   }
 
   // 新しいアイテムを追加
@@ -217,11 +169,18 @@ export function addItemToBag(itemDef, quantity) {
       ...itemDef,
       quantity: quantity,
     };
-    _displayMessageCallback(`${itemDef.name}を${quantity}個手に入れた！`);
-    renderInventoryGrid();
+    if (!suppressMessage) {
+      // メッセージ抑制がtrueでない場合のみ表示
+      _displayMessageCallback(`${itemDef.name}を${quantity}個手に入れた！`);
+    }
     return true;
   } else {
-    _displayMessageCallback("カバンがいっぱいで、これ以上アイテムを持てない！");
+    if (!suppressMessage) {
+      // メッセージ抑制がtrueでない場合のみ表示
+      _displayMessageCallback(
+        "カバンがいっぱいで、これ以上アイテムを持てない！"
+      );
+    }
     return false;
   }
 }
@@ -230,54 +189,87 @@ export function addItemToBag(itemDef, quantity) {
  * 船体コンテナにアイテムを追加する
  * @param {Object} itemDef - アイテム定義
  * @param {number} quantity - 数量
+ * @param {number} [targetIndex = -1] - アイテムを追加する特定のインデックス。-1の場合は空きスロットを自動で探す。
  * @returns {boolean} - 追加に成功したかどうか
  */
-export function addItemToShipContainer(itemDef, quantity) {
-  const existingItem = inventoryData.shipContainerInventory.find(
-    (item) => item.id === itemDef.id
+export function addItemToShipContainer(itemDef, quantity, targetIndex = -1) {
+  // 既存のアイテムへのスタックを試みる（サイズに関わらず）
+  const existingStackableItem = inventoryData.shipContainerInventory.find(
+    (item) =>
+      item &&
+      typeof item === "object" &&
+      item.id === itemDef.id &&
+      item.quantity < itemDef.stackLimit
   );
-  if (existingItem) {
-    existingItem.quantity += quantity;
-    _displayMessageCallback(
-      `${itemDef.name}を${quantity}個船体コンテナに入れた！(合計: ${existingItem.quantity})`
-    );
-    renderInventoryGrid();
-    return true;
+  if (existingStackableItem) {
+    const spaceLeft =
+      existingStackableItem.stackLimit - existingStackableItem.quantity;
+    const quantityToAdd = Math.min(quantity, spaceLeft);
+    if (quantityToAdd > 0) {
+      existingStackableItem.quantity += quantityToAdd;
+      _displayMessageCallback(
+        `${itemDef.name}を${quantityToAdd}個船体コンテナに入れた！(合計: ${existingStackableItem.quantity})`
+      );
+      return true; // スタック成功
+    }
   }
 
-  const emptySlotIndex = inventoryData.shipContainerInventory.findIndex(
-    (item) => item === null || item === undefined
-  );
+  const itemWidth = itemDef.size.width;
+  const itemHeight = itemDef.size.height;
 
-  if (
-    emptySlotIndex !== -1 &&
-    emptySlotIndex < inventoryData.maxItemTypesInShipContainer
-  ) {
-    inventoryData.shipContainerInventory[emptySlotIndex] = {
+  let finalPlacementIndex = -1;
+
+  // targetIndexが指定されている場合、その位置に配置を試みる
+  if (targetIndex !== -1) {
+    if (checkSpaceAvailability(targetIndex, itemWidth, itemHeight)) {
+      finalPlacementIndex = targetIndex;
+    } else {
+      _displayMessageCallback(
+        "指定された場所にアイテムを置くことができません。"
+      );
+      return false;
+    }
+  } else {
+    // targetIndexが指定されていない場合、最初の空きスペースを探す
+    for (let i = 0; i < inventoryData.initialUsableShipContainerSlots; i++) {
+      if (checkSpaceAvailability(i, itemWidth, itemHeight)) {
+        finalPlacementIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (finalPlacementIndex !== -1) {
+    // アイテムを最終的な配置インデックスに置く
+    inventoryData.shipContainerInventory[finalPlacementIndex] = {
       ...itemDef,
       quantity: quantity,
     };
+    // アイテムが占有する他のセルにマーカーを設定
+    const startRow = Math.floor(finalPlacementIndex / _totalBagCols);
+    const startCol = finalPlacementIndex % _totalBagCols;
+    for (let r = 0; r < itemHeight; r++) {
+      for (let c = 0; c < itemWidth; c++) {
+        if (r === 0 && c === 0) continue; // 左上セルはスキップ
+
+        const occupiedFlatIndex =
+          (startRow + r) * _totalBagCols + (startCol + c);
+        if (occupiedFlatIndex < inventoryData.maxItemTypesInShipContainer) {
+          // このセルが、どのアイテムのどの開始インデックスによって占有されているかを示すマーカー
+          inventoryData.shipContainerInventory[
+            occupiedFlatIndex
+          ] = `__OCCUPIED_BY_${finalPlacementIndex}__`;
+        }
+      }
+    }
+
     _displayMessageCallback(
       `${itemDef.name}を${quantity}個船体コンテナに入れた！`
     );
-    renderInventoryGrid();
-    return true;
-  } else if (
-    inventoryData.shipContainerInventory.length <
-    inventoryData.maxItemTypesInShipContainer
-  ) {
-    inventoryData.shipContainerInventory.push({
-      ...itemDef,
-      quantity: quantity,
-    });
-    _displayMessageCallback(
-      `${itemDef.name}を${quantity}個船体コンテナに入れた！`
-    );
-    renderInventoryGrid();
     return true;
   } else {
     _displayMessageCallback(
-      "船体コンテナがいっぱいで、これ以上アイテムを置けない！"
+      "船体コンテナに空きがないため、これ以上アイテムを置けない！"
     );
     return false;
   }
@@ -300,11 +292,9 @@ export function removeItemFromBag(itemId, quantity) {
         `${inventoryData.bagInventory[itemIndex].name}を${quantity}個使った。`
       );
     } else {
-      const removedItemName = inventoryData.bagInventory[itemIndex].name;
-      inventoryData.bagInventory.splice(itemIndex, 1); // アイテムを完全に削除
-      _displayMessageCallback(`${removedItemName}を使い切った。`);
+      // アイテムを使い切った場合、ログは表示しない
+      inventoryData.bagInventory[itemIndex] = null; // nullを設定してスロットを空ける
     }
-    renderInventoryGrid();
     return true;
   }
   _displayMessageCallback("指定されたアイテムはカバンにありません。");
@@ -318,22 +308,41 @@ export function removeItemFromBag(itemId, quantity) {
  * @returns {boolean} - 削除に成功したかどうか
  */
 export function removeItemFromShipContainer(itemId, quantity) {
+  // アイテムオブジェクトが格納されているインデックスを探す
   const itemIndex = inventoryData.shipContainerInventory.findIndex(
-    (item) => item && item.id === itemId
+    (item) => item && typeof item === "object" && item.id === itemId
   );
   if (itemIndex !== -1) {
-    if (inventoryData.shipContainerInventory[itemIndex].quantity > quantity) {
-      inventoryData.shipContainerInventory[itemIndex].quantity -= quantity;
+    const itemToRemove = inventoryData.shipContainerInventory[itemIndex];
+    const itemDef = allItemDefinitions.find(
+      (def) => def && def.id === itemToRemove.id
+    ); // defがnullでないことを確認
+    if (!itemDef) {
+      _displayMessageCallback("アイテム定義が見つかりません。");
+      return false;
+    }
+
+    if (itemToRemove.quantity > quantity) {
+      itemToRemove.quantity -= quantity;
       _displayMessageCallback(
-        `${inventoryData.shipContainerInventory[itemIndex].name}を${quantity}個取り出した。`
+        `${itemToRemove.name}を${quantity}個取り出した。`
       );
     } else {
-      const removedItemName =
-        inventoryData.shipContainerInventory[itemIndex].name;
-      inventoryData.shipContainerInventory.splice(itemIndex, 1); // アイテムを完全に削除
+      const removedItemName = itemToRemove.name;
+      // アイテムが占有していた全てのセルをクリア
+      const startRow = Math.floor(itemIndex / _totalBagCols);
+      const startCol = itemIndex % _totalBagCols;
+      for (let r = 0; r < itemDef.size.height; r++) {
+        for (let c = 0; c < itemDef.size.width; c++) {
+          const occupiedFlatIndex =
+            (startRow + r) * _totalBagCols + (startCol + c);
+          if (occupiedFlatIndex < inventoryData.maxItemTypesInShipContainer) {
+            inventoryData.shipContainerInventory[occupiedFlatIndex] = null; // 全てnullにする
+          }
+        }
+      }
       _displayMessageCallback(`${removedItemName}を全て取り出した。`);
     }
-    renderInventoryGrid();
     return true;
   }
   _displayMessageCallback("指定されたアイテムは船体コンテナにありません。");
@@ -351,7 +360,7 @@ export function getUniqueItemTypesCountInBag() {
 }
 
 /**
- * インベントリグリッドを描画する
+ * インベントリグリッド（船体コンテナ）を描画する
  */
 function renderInventoryGrid() {
   if (!_inventoryGridElement) {
@@ -360,60 +369,119 @@ function renderInventoryGrid() {
   }
   _inventoryGridElement.innerHTML = ""; // 既存のセルをクリア
 
-  // グリッドの列数を設定
-  _inventoryGridElement.style.gridTemplateColumns = `repeat(${_totalBagCols}, 1fr)`;
+  // グリッドの列数を設定 (CSSで固定サイズを設定しているので、ここでは不要だが念のため残す)
+  _inventoryGridElement.style.gridTemplateColumns = `repeat(${_totalBagCols}, 60px)`;
+  _inventoryGridElement.style.gridTemplateRows = `repeat(${_totalBagRows}, 60px)`;
+  // gridのgapはCSSで0pxに設定済み
 
-  const totalCells = _totalBagRows * _totalBagCols;
-  const usableRows = Math.floor(_initialUsableBagSlots / _totalBagCols); // 使える行数（4x4なら4）
-  const usableCols = _initialUsableBagSlots % _totalBagCols; // 使える列数（4x4なら4）
+  const CELL_SIZE = 60; // 1セルの基本サイズ (px)
+  const GAP_SIZE = 0; // セル間の隙間 (px) - CSSで0に設定済み
 
-  for (let i = 0; i < totalCells; i++) {
-    const cell = document.createElement("div");
-    cell.classList.add("inventory-cell");
-
+  // 船体コンテナの全てのセルを走査して描画
+  for (let i = 0; i < inventoryData.maxItemTypesInShipContainer; i++) {
+    const item = inventoryData.shipContainerInventory[i];
     const row = Math.floor(i / _totalBagCols);
     const col = i % _totalBagCols;
 
-    // 4x4の範囲内かどうかで usable-cell クラスを適用
-    // rowが4未満 AND colが4未満の場合にusableとする
+    const cell = document.createElement("div");
+    cell.classList.add("inventory-cell");
+    cell.dataset.itemIndex = i; // セル自身のインデックスをデータ属性として保存
+
+    // 使用可能/使用不可のスタイルを適用 (4x4の制約)
     if (row < 4 && col < 4) {
-      // ここで4x4の範囲を指定したわ！
       cell.dataset.usable = "true";
     } else {
-      cell.classList.add("unusable-cell");
+      cell.classList.add("unusable-cell"); // 無効なセルにはunusable-cellクラスを追加
       cell.dataset.usable = "false";
     }
 
-    const item = inventoryData.bagInventory[i];
-    if (item) {
-      cell.textContent = `${item.name} x${item.quantity}`;
-      cell.dataset.itemId = item.id; // アイテムIDをデータ属性として保存
+    if (item && typeof item === "object") {
+      // アイテムオブジェクトが格納されている場合（アイテムの左上セル）
+      const itemDef = allItemDefinitions.find(
+        (def) => def && def.id === item.id
+      ); // defがnullでないことを確認
+      if (!itemDef) {
+        console.error(`アイテム定義が見つかりません: ${item.id}`);
+        continue;
+      }
+
+      // アイテムのサイズに合わせてセルの幅と高さを明示的に設定
+      // CSS Gridのspanは使わず、直接サイズを計算して設定
+      cell.style.width = `${
+        itemDef.size.width * CELL_SIZE + (itemDef.size.width - 1) * GAP_SIZE
+      }px`;
+      cell.style.height = `${
+        itemDef.size.height * CELL_SIZE + (itemDef.size.height - 1) * GAP_SIZE
+      }px`;
+
+      // アイテムの背景色をセルに適用 (unusable-cellでない場合のみ)
+      // ここで背景色を設定する行を削除します
+      // if (cell.dataset.usable === "true") {
+      //   cell.style.backgroundColor = itemDef.color;
+      // }
+      cell.classList.add("has-item"); // アイテムがあることを示すクラスを追加
+      cell.style.zIndex = "1"; // アイテムが他の空セルより手前に来るように
+      cell.style.gridColumn = `${col + 1} / span ${itemDef.size.width}`; // 位置指定のため残す
+      cell.style.gridRow = `${row + 1} / span ${itemDef.size.height}`; // 位置指定のため残す
+
+      // ドラッグ可能に設定
+      cell.draggable = true;
+      cell.dataset.itemId = item.id;
       cell.dataset.itemQuantity = item.quantity;
-      cell.dataset.itemType = item.type; // アイテムタイプをデータ属性として保存
+      cell.dataset.itemType = item.type;
+      cell.dataset.sourceInventory = "shipContainer";
+      cell.dataset.itemIndex = i; // アイテムの開始インデックスを保存
+
+      cell.addEventListener("dragstart", handleDragStart);
+
+      // アイテム名を表示 (画像の上に配置)
+      const nameText = document.createElement("span");
+      nameText.textContent = `${item.name}`;
+      nameText.classList.add("item-name");
+      cell.appendChild(nameText); // 名前を最初に追加
+
+      // アイテムの画像を表示
+      if (item.imageUrl) {
+        const img = document.createElement("img");
+        img.src = item.imageUrl;
+        img.alt = item.name;
+        img.classList.add("item-image");
+        cell.appendChild(img);
+      }
+
+      // 数量を表示
+      const quantityText = document.createElement("span");
+      quantityText.textContent = `x${item.quantity}`;
+      quantityText.classList.add("item-quantity");
+      cell.appendChild(quantityText);
+    } else if (typeof item === "string" && item.startsWith("__OCCUPIED_BY_")) {
+      // このセルが他のアイテムによって占有されている場合、非表示にする
+      cell.style.display = "none"; // 非表示にする
+      cell.draggable = false; // ドラッグ不可
+      cell.dataset.usable = "false"; // ドロップ不可
+      // 背景やボーダーはCSSで定義されたデフォルトのままになるが、display:noneなので見えない
     } else {
-      cell.textContent = ""; // 空のセル
+      // 空のセル
+      cell.textContent = "";
       cell.dataset.itemId = "";
       cell.dataset.itemQuantity = 0;
       cell.dataset.itemType = "";
+      cell.draggable = false; // ドラッグ不可
+      cell.style.backgroundColor = ""; // 直接設定された背景色をクリア
+      cell.style.border = ""; // 直接設定されたボーダーをクリア
+      cell.style.zIndex = "0"; // 他のアイテムより奥に
+      cell.style.display = "flex"; // 確実に表示されるように
+      cell.style.width = `${CELL_SIZE}px`; // 空のセルも固定サイズ
+      cell.style.height = `${CELL_SIZE}px`; // 空のセルも固定サイズ
     }
 
-    // クリックイベントリスナーを追加
-    cell.addEventListener("click", (event) => {
-      // 使えないスロットで、かつアイテムがない場合はメッセージを表示して何もしない
-      if (cell.dataset.usable === "false" && !item) {
-        _displayMessageCallback("このスロットはまだロックされています。");
-        return;
-      }
-
-      // アイテムがある場合は、そのアイテムの情報を表示する
-      if (item) {
-        _displayMessageCallback(
-          `${item.name} (${item.description}) - 数量: ${item.quantity}`
-        );
-        // ここでアイテム使用などの追加アクションを実装することも可能
-      } else {
-        _displayMessageCallback("このスロットは空です。");
-      }
+    // 全てのセルにドロップイベントリスナーを追加（空のセルもドロップターゲットになり得るため）
+    cell.addEventListener("dragover", handleDragOver);
+    cell.addEventListener("dragleave", handleDragLeave);
+    cell.addEventListener("drop", handleDrop);
+    // ここにイベント伝播を停止する処理を追加
+    cell.addEventListener("drop", (e) => {
+      e.stopPropagation(); // 親要素へのイベント伝播を停止
     });
 
     _inventoryGridElement.appendChild(cell);
@@ -421,7 +489,7 @@ function renderInventoryGrid() {
 }
 
 /**
- * 利用可能なアイテムリストを描画する
+ * 利用可能なアイテムリスト（カバン）を描画する
  */
 function renderAvailableItems() {
   if (!_availableItemsListElement) {
@@ -430,15 +498,511 @@ function renderAvailableItems() {
   }
   _availableItemsListElement.innerHTML = ""; // 既存のアイテムをクリア
 
-  inventoryData.allItemDefinitions.forEach((itemDef) => {
-    const listItem = document.createElement("li");
-    listItem.textContent = itemDef.name;
-    listItem.dataset.itemId = itemDef.id; // データ属性にIDを保存
+  // カバンの中身を描画
+  inventoryData.bagInventory.forEach((item, index) => {
+    // bagInventoryを参照
+    if (item) {
+      // nullやundefinedの要素はスキップ
+      const listItem = document.createElement("li");
+      listItem.classList.add("inventory-list-item"); // スタイル用のクラスを追加
+      listItem.draggable = true; // アイテムがある場合はドラッグ可能にする
+      listItem.dataset.itemId = item.id;
+      listItem.dataset.itemQuantity = item.quantity;
+      listItem.dataset.itemType = item.type;
+      listItem.dataset.sourceInventory = "bag"; // ドラッグ元を示す
+      listItem.dataset.itemIndex = index; // アイテムのインデックスを保存
 
-    // クリックでアイテムをカバンに追加する機能（テスト用）
-    listItem.addEventListener("click", () => {
-      addItemToBag(itemDef, 1); // 1個追加
-    });
-    _availableItemsListElement.appendChild(listItem);
+      // ドラッグ開始イベントリスナー
+      listItem.addEventListener("dragstart", handleDragStart);
+
+      const itemText = document.createElement("span");
+      itemText.textContent = `${item.name} (${item.size.width}x${item.size.height}) x${item.quantity}`; // サイズを追加
+      listItem.appendChild(itemText);
+
+      listItem.dataset.itemId = item.id; // データ属性にIDを保存
+
+      // クリックでアイテム情報を表示する機能
+      listItem.addEventListener("click", () => {
+        _displayMessageCallback(
+          `${item.name} (${item.description}) - 数量: ${item.quantity}`
+        );
+        // ここでアイテム使用などの追加アクションを実装することも可能
+      });
+      _availableItemsListElement.appendChild(listItem);
+    }
   });
+}
+
+/**
+ * ドラッグ開始時の処理
+ * @param {Event} event - DragEventオブジェクト
+ */
+function handleDragStart(event) {
+  const cellElement = event.target.closest(".inventory-cell"); // 親のセル要素を取得
+  if (!cellElement) {
+    // カバンからのドラッグの場合、listItem自体がターゲットになる
+    const listItemElement = event.target.closest(".inventory-list-item");
+    if (!listItemElement) {
+      console.error(
+        "Drag started on an element not within an inventory cell or list item."
+      );
+      return;
+    }
+    // カバンからのドラッグ情報
+    draggedItemInfo = {
+      itemId: listItemElement.dataset.itemId,
+      quantity: parseInt(listItemElement.dataset.itemQuantity, 10),
+      sourceInventory: listItemElement.dataset.sourceInventory,
+      itemIndex: parseInt(listItemElement.dataset.itemIndex, 10),
+    };
+  } else {
+    // 船体コンテナからのドラッグ情報
+    draggedItemInfo = {
+      itemId: cellElement.dataset.itemId,
+      quantity: parseInt(cellElement.dataset.itemQuantity, 10),
+      sourceInventory: cellElement.dataset.sourceInventory,
+      itemIndex: parseInt(cellElement.dataset.itemIndex, 10),
+    };
+  }
+
+  event.dataTransfer.setData(
+    "application/json",
+    JSON.stringify(draggedItemInfo)
+  );
+  event.dataTransfer.effectAllowed = "move"; // 移動を許可する
+}
+
+/**
+ * ヘルパー関数: 指定された開始インデックスからアイテムを配置できるかチェックする
+ * @param {number} startIndex - チェックを開始するフラットインデックス
+ * @param {number} itemWidth - アイテムの幅
+ * @param {number} itemHeight - アイテムの高さ
+ * @param {number} [excludeIndex = -1] - チェックから除外するインデックス（D&Dでの移動元など）
+ * @returns {boolean} - 配置可能であればtrue
+ */
+const checkSpaceAvailability = (
+  startIndex,
+  itemWidth,
+  itemHeight,
+  excludeIndex = -1
+) => {
+  const startRow = Math.floor(startIndex / _totalBagCols);
+  const startCol = startIndex % _totalBagCols;
+
+  // アイテムが4x4の使用可能エリアの境界を越えないかチェック
+  if (startRow + itemHeight > 4 || startCol + itemWidth > 4) {
+    return false;
+  }
+
+  for (let r = 0; r < itemHeight; r++) {
+    for (let c = 0; c < itemWidth; c++) {
+      const checkRow = startRow + r;
+      const checkCol = startCol + c;
+      const checkFlatIndex = checkRow * _totalBagCols + checkCol;
+
+      // 全体グリッドの範囲外の場合
+      if (checkRow >= _totalBagRows || checkCol >= _totalBagCols) {
+        return false;
+      }
+
+      const cellContent = inventoryData.shipContainerInventory[checkFlatIndex];
+      if (cellContent !== null && cellContent !== undefined) {
+        // チェック中のセルが、除外インデックス（移動元）自身、またはその占有マーカーであればOK
+        if (
+          checkFlatIndex === excludeIndex ||
+          (typeof cellContent === "string" &&
+            cellContent.startsWith("__OCCUPIED_BY_") &&
+            parseInt(cellContent.split("_")[2]) === excludeIndex)
+        ) {
+          continue;
+        }
+        return false; // 他のアイテムまたは占有マーカーが存在する
+      }
+    }
+  }
+  return true; // 全てのチェックをパス
+};
+
+/**
+ * ドラッグ中の要素がドロップターゲットの上にあるときの処理
+ * @param {Event} event - DragEventオブジェクト
+ */
+function handleDragOver(event) {
+  event.preventDefault(); // デフォルトの処理（ドロップを許可しない）をキャンセル
+  event.dataTransfer.dropEffect = "move"; // カーソルを移動アイコンにする
+
+  // 全てのハイライトを一度クリア
+  document.querySelectorAll(".highlight-cell").forEach((cell) => {
+    cell.classList.remove("highlight-cell");
+  });
+  document.querySelectorAll(".cannot-drop-highlight").forEach((cell) => {
+    cell.classList.remove("cannot-drop-highlight");
+  });
+
+  const targetElement =
+    event.target.closest(".inventory-cell") || event.currentTarget;
+
+  if (
+    draggedItemInfo &&
+    targetElement &&
+    (targetElement.id === "inventoryGrid" ||
+      targetElement.classList.contains("inventory-cell"))
+  ) {
+    const itemDef = allItemDefinitions.find(
+      (def) => def && def.id === draggedItemInfo.itemId
+    ); // defがnullでないことを確認
+    if (!itemDef) return;
+
+    let potentialTargetIndex = parseInt(targetElement.dataset.itemIndex, 10);
+    if (isNaN(potentialTargetIndex)) {
+      // グリッドの隙間にドロップされた場合
+      // ドロップされた座標から最も近いセルを特定するロジックが必要だが、
+      // 今回は簡略化のため、イベントターゲットがセルでなければハイライトしない
+      return;
+    }
+
+    const excludeIndex =
+      draggedItemInfo.sourceInventory === "shipContainer"
+        ? draggedItemInfo.itemIndex
+        : -1;
+
+    if (
+      checkSpaceAvailability(
+        potentialTargetIndex,
+        itemDef.size.width,
+        itemDef.size.height,
+        excludeIndex
+      )
+    ) {
+      // 配置可能な場合、該当するセルをハイライト
+      const startRow = Math.floor(potentialTargetIndex / _totalBagCols);
+      const startCol = Math.floor(potentialTargetIndex % _totalBagCols); // ここもMath.floorを追加
+      for (let r = 0; r < itemDef.size.height; r++) {
+        for (let c = 0; c < itemDef.size.width; c++) {
+          const highlightIndex =
+            (startRow + r) * _totalBagCols + (startCol + c);
+          const cellToHighlight = _inventoryGridElement.querySelector(
+            `[data-item-index="${highlightIndex}"]`
+          );
+          if (cellToHighlight) {
+            cellToHighlight.classList.add("highlight-cell");
+          }
+        }
+      }
+    } else {
+      // 配置できない場合、赤くハイライト
+      const startRow = Math.floor(potentialTargetIndex / _totalBagCols);
+      const startCol = Math.floor(potentialTargetIndex % _totalBagCols); // ここもMath.floorを追加
+      for (let r = 0; r < itemDef.size.height; r++) {
+        for (let c = 0; c < itemDef.size.width; c++) {
+          const highlightIndex =
+            (startRow + r) * _totalBagCols + (startCol + c);
+          const cellToHighlight = _inventoryGridElement.querySelector(
+            `[data-item-index="${highlightIndex}"]`
+          );
+          if (cellToHighlight) {
+            cellToHighlight.classList.add("cannot-drop-highlight");
+          }
+        }
+      }
+    }
+  } else if (
+    draggedItemInfo &&
+    event.currentTarget.id === "availableItemsList"
+  ) {
+    // カバンへのドラッグオーバー（単一セルなので、リスト全体をハイライト）
+    event.currentTarget.classList.add("highlight-cell");
+  }
+}
+
+/**
+ * ドラッグ中の要素がドロップターゲットから離れたときの処理
+ * @param {Event} event - DragEventオブジェクト
+ */
+function handleDragLeave(event) {
+  // 全てのハイライトをクリア
+  document.querySelectorAll(".highlight-cell").forEach((cell) => {
+    cell.classList.remove("highlight-cell");
+  });
+  document.querySelectorAll(".cannot-drop-highlight").forEach((cell) => {
+    cell.classList.remove("cannot-drop-highlight");
+  });
+}
+
+/**
+ * 要素がドロップされたときの処理
+ * @param {Event} event - DragEventオブジェクト
+ */
+function handleDrop(event) {
+  event.preventDefault();
+
+  // ドロップ時に全てのハイライトをクリア
+  document.querySelectorAll(".highlight-cell").forEach((cell) => {
+    cell.classList.remove("highlight-cell");
+  });
+  document.querySelectorAll(".cannot-drop-highlight").forEach((cell) => {
+    cell.classList.remove("cannot-drop-highlight");
+  });
+
+  const data = event.dataTransfer.getData("application/json");
+  if (!data) return;
+
+  let droppedItem;
+  try {
+    droppedItem = JSON.parse(data);
+  } catch (e) {
+    console.error("Failed to parse dropped item data:", e);
+    _displayMessageCallback("アイテムデータの読み込みに失敗しました。");
+    return;
+  }
+
+  // droppedItemがnullまたはitemIdがない場合のチェック
+  if (!droppedItem || !droppedItem.itemId) {
+    _displayMessageCallback("無効なアイテムデータです。");
+    return;
+  }
+
+  const itemDef = allItemDefinitions.find(
+    (def) => def && def.id === droppedItem.itemId
+  ); // defがnullでないことを確認
+  if (!itemDef) {
+    _displayMessageCallback("不明なアイテムです。");
+    return;
+  }
+
+  let targetInventoryType;
+  let targetIndex = -1; // ドロップ先のインデックス
+  const targetElement =
+    event.target.closest(".inventory-cell") || event.currentTarget;
+
+  // ドロップ先のインベントリタイプとインデックスを特定
+  if (
+    targetElement &&
+    (targetElement.id === "inventoryGrid" ||
+      targetElement.classList.contains("inventory-cell"))
+  ) {
+    targetInventoryType = "shipContainer";
+    if (targetElement.classList.contains("inventory-cell")) {
+      targetIndex = parseInt(targetElement.dataset.itemIndex, 10);
+
+      // ドロップ先が使用不可セルならエラー
+      if (targetElement.dataset.usable === "false") {
+        _displayMessageCallback("このスロットはロックされています。");
+        return;
+      }
+    } else {
+      // グリッドの空きスペースにドロップされた場合（特定のセルにドロップされていない）
+      _displayMessageCallback(
+        "アイテムをグリッドの隙間にはドロップできません。特定のセルにドロップしてください。"
+      );
+      return;
+    }
+  } else if (
+    targetElement &&
+    (targetElement.id === "availableItemsList" ||
+      targetElement.classList.contains("inventory-list-item"))
+  ) {
+    targetInventoryType = "bag";
+    // カバンへのドロップは、最初の空きスロットを探す
+    for (let i = 0; i < _initialUsableBagSlots; i++) {
+      if (!inventoryData.bagInventory[i]) {
+        targetIndex = i;
+        break;
+      }
+    }
+    if (targetIndex === -1) {
+      _displayMessageCallback("カバンに空きがないため、アイテムを置けません。");
+      return;
+    }
+  } else {
+    _displayMessageCallback("アイテムをここにドロップすることはできません。");
+    return;
+  }
+
+  let success = false;
+
+  // 同じインベントリ内での移動（船体コンテナ内）
+  if (
+    droppedItem.sourceInventory === targetInventoryType &&
+    targetInventoryType === "shipContainer"
+  ) {
+    const sourceIndex = droppedItem.itemIndex;
+    const destinationIndex = targetIndex;
+
+    if (sourceIndex === destinationIndex) {
+      _displayMessageCallback("同じスロットへの移動です。");
+      return;
+    }
+
+    const sourceItem = inventoryData.shipContainerInventory[sourceIndex];
+    // ここに防御的なチェックを追加
+    if (
+      !sourceItem ||
+      typeof sourceItem !== "object" ||
+      sourceItem.id === undefined
+    ) {
+      _displayMessageCallback(
+        "エラー: 移動元のアイテムが見つからないか、無効です。"
+      );
+      renderInventoryGrid(); // UIを最新の状態に再描画
+      renderAvailableItems();
+      return;
+    }
+
+    const sourceItemDef = allItemDefinitions.find(
+      (def) => def && def.id === sourceItem.id
+    ); // defがnullでないことを確認
+    if (!sourceItemDef) {
+      // defensive check
+      _displayMessageCallback("移動元のアイテム定義が見つかりません。");
+      return;
+    }
+
+    // 移動先の領域が、ドラッグされたアイテムのサイズに対して空いているかチェック
+    if (
+      checkSpaceAvailability(
+        destinationIndex,
+        sourceItemDef.size.width,
+        sourceItemDef.size.height,
+        sourceIndex
+      )
+    ) {
+      // 元の場所のアイテムと占有マーカーをクリア
+      const oldStartRow = Math.floor(sourceIndex / _totalBagCols);
+      const oldStartCol = sourceIndex % _totalBagCols;
+      for (let r = 0; r < sourceItemDef.size.height; r++) {
+        for (let c = 0; c < sourceItemDef.size.width; c++) {
+          const flatIdxToClear =
+            (oldStartRow + r) * _totalBagCols + (oldStartCol + c);
+          if (flatIdxToClear < inventoryData.maxItemTypesInShipContainer) {
+            inventoryData.shipContainerInventory[flatIdxToClear] = null;
+          }
+        }
+      }
+
+      // 新しい場所にアイテムを配置
+      inventoryData.shipContainerInventory[destinationIndex] = sourceItem;
+
+      // 新しい場所の占有マーカーを設定
+      const newStartRow = Math.floor(destinationIndex / _totalBagCols);
+      const newStartCol = destinationIndex % _totalBagCols;
+      for (let r = 0; r < sourceItemDef.size.height; r++) {
+        for (let c = 0; c < itemDef.size.width; c++) {
+          if (r === 0 && c === 0) continue; // 左上セルはスキップ
+          const occupiedFlatIndex =
+            (newStartRow + r) * _totalBagCols + (newStartCol + c);
+          if (occupiedFlatIndex < inventoryData.maxItemTypesInShipContainer) {
+            inventoryData.shipContainerInventory[
+              occupiedFlatIndex
+            ] = `__OCCUPIED_BY_${destinationIndex}__`;
+          }
+        }
+      }
+      _displayMessageCallback(
+        `${sourceItem.name}を船体コンテナ内で移動しました。`
+      );
+      success = true;
+    } else {
+      _displayMessageCallback("船体コンテナのその場所には移動できません。");
+    }
+  }
+  // 異なるインベントリ間での移動
+  else {
+    if (
+      droppedItem.sourceInventory === "bag" &&
+      targetInventoryType === "shipContainer"
+    ) {
+      // カバンから船体コンテナへ
+      const itemWidth = itemDef.size.width;
+      const itemHeight = itemDef.size.height;
+
+      // ドロップ先のセルが既にアイテム本体で埋まっているか、占有マーカーがあるかを確認
+      const isTargetCellOccupied =
+        inventoryData.shipContainerInventory[targetIndex] !== null &&
+        typeof inventoryData.shipContainerInventory[targetIndex] === "object";
+      const isTargetCellOccupiedByMarker =
+        inventoryData.shipContainerInventory[targetIndex] !== null &&
+        typeof inventoryData.shipContainerInventory[targetIndex] === "string" &&
+        inventoryData.shipContainerInventory[targetIndex].startsWith(
+          "__OCCUPIED_BY_"
+        );
+
+      if (isTargetCellOccupied || isTargetCellOccupiedByMarker) {
+        _displayMessageCallback(
+          "船体コンテナのその場所にはすでにアイテムがあります。"
+        );
+        return;
+      }
+
+      if (checkSpaceAvailability(targetIndex, itemWidth, itemHeight)) {
+        if (removeItemFromBag(droppedItem.itemId, droppedItem.quantity)) {
+          // 船体コンテナの指定位置にアイテムを追加
+          inventoryData.shipContainerInventory[targetIndex] = {
+            ...itemDef,
+            quantity: droppedItem.quantity,
+          };
+
+          // 占有マーカーを設定
+          const startRow = Math.floor(targetIndex / _totalBagCols);
+          const startCol = targetIndex % _totalBagCols;
+          for (let r = 0; r < itemDef.size.height; r++) {
+            for (let c = 0; c < itemDef.size.width; c++) {
+              if (r === 0 && c === 0) continue;
+              const occupiedFlatIndex =
+                (startRow + r) * _totalBagCols + (startCol + c);
+              if (
+                occupiedFlatIndex < inventoryData.maxItemTypesInShipContainer
+              ) {
+                inventoryData.shipContainerInventory[
+                  occupiedFlatIndex
+                ] = `__OCCUPIED_BY_${targetIndex}__`;
+              }
+            }
+          }
+          success = true;
+          _displayMessageCallback(
+            `${itemDef.name}をカバンから船体コンテナへ移動しました。`
+          );
+        }
+      } else {
+        _displayMessageCallback(
+          "船体コンテナのその場所にはアイテムを置けません。"
+        );
+      }
+    } else if (
+      droppedItem.sourceInventory === "shipContainer" &&
+      targetInventoryType === "bag"
+    ) {
+      // 船体コンテナからカバンへ
+      // 船体コンテナからアイテムを削除（これによって占有マーカーもクリアされる）
+      if (
+        removeItemFromShipContainer(droppedItem.itemId, droppedItem.quantity)
+      ) {
+        // カバンにアイテムを追加
+        if (addItemToBag(itemDef, droppedItem.quantity)) {
+          success = true;
+          _displayMessageCallback(
+            `${itemDef.name}を船体コンテナからカバンへ移動しました。`
+          );
+        } else {
+          // カバンに空きがない場合、船体コンテナに戻す（ロールバック）
+          addItemToShipContainer(
+            itemDef,
+            droppedItem.quantity,
+            droppedItem.itemIndex
+          ); // 元のインデックスに戻す
+          _displayMessageCallback(
+            "カバンに空きがないため、移動できませんでした。"
+          );
+        }
+      }
+    }
+  }
+
+  // UIを更新
+  if (success) {
+    renderInventoryGrid();
+    renderAvailableItems();
+  }
+  draggedItemInfo = null; // ドラッグ情報をクリア
 }

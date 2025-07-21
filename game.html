@@ -9,6 +9,7 @@
     <!-- location.cssを新しく読み込むわよ！ -->
     <link rel="stylesheet" href="location/location.css" />
   </head>
+
   <body>
     <!-- 左側のUI要素をまとめるコンテナ -->
     <div class="left-ui-container">
@@ -43,17 +44,17 @@
           </div>
         </div>
         <!-- 船の状態を追加 -->
-        <div class="game-info-item">
+        <div class="game-info-item" style="display: none">
           <span class="game-info-label">状態:</span>
           <span id="shipStateDisplay"></span>
         </div>
         <!-- 現在地は不要なので削除するわね！ -->
         <div class="game-info-item">
-          <span class="game-info-label">体力:</span>
-          <!-- 体力数値表示を体力バーコンテナの中に移動 -->
-          <div class="health-bar-container">
-            <div id="healthBar" class="health-bar"></div>
-            <span id="healthValue" class="health-value-overlay"></span>
+          <span class="game-info-label">耐久:</span>
+          <!-- 体力バーから耐久バーに変更 -->
+          <div class="durability-bar-container">
+            <div id="durabilityBar" class="durability-bar"></div>
+            <span id="durabilityValue" class="durability-value-overlay"></span>
           </div>
         </div>
         <!-- 燃料ゲージを追加 -->
@@ -123,43 +124,12 @@
         <h3 id="infoModalTitle" class="info-modal-title"></h3>
         <p id="infoModalText" class="info-modal-text"></p>
         <p id="infoModalPrices" class="info-modal-prices"></p>
-        <!-- 情報モーダルの閉じるボタンを追加するわよ！ -->
-        <button class="choice-button-default">閉じる</button>
+        <!-- 情報モーダルの閉じるボタンを削除しました -->
       </div>
     </div>
 
     <!-- 外部JavaScriptファイルを読み込む -->
+    <script type="module" src="resources/domLoader.js"></script>
     <script type="module" src="game.js"></script>
-    <!-- リソースSVGをDOMに挿入するスクリプト -->
-    <script type="module">
-      import { airshipSvgString } from "./resources/airship.svg.js";
-      import { bagSvgString } from "./resources/bag.svg.js";
-      import { weatherIconsSvg } from "./resources/weathers.svg.js";
-
-      document.addEventListener("DOMContentLoaded", () => {
-        // 飛行船SVGを挿入
-        const airshipContainer = document.getElementById("airshipContainer");
-        if (airshipContainer) {
-          airshipContainer.innerHTML = airshipSvgString;
-        }
-
-        // バッグアイコンSVGを挿入
-        const bagIconContainer = document.getElementById("bagIcon");
-        if (bagIconContainer) {
-          bagIconContainer.innerHTML = bagSvgString;
-        }
-
-        // 天気アイコンSVGを挿入
-        const weatherIconContainer = document.getElementById(
-          "weatherIconContainer"
-        );
-        if (weatherIconContainer) {
-          for (const iconId in weatherIconsSvg) {
-            weatherIconContainer.innerHTML += weatherIconsSvg[iconId];
-          }
-        }
-      });
-    </script>
-    <!-- リソーステストスクリプトの読み込みを削除したわ！ -->
   </body>
 </html>

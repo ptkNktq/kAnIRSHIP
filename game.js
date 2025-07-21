@@ -5,8 +5,14 @@ import * as SmallTown from "./location/smallTown.js";
 import * as LargeTown from "./location/largeTown.js";
 import * as Airship from "./location/airship.js";
 import * as Island from "./location/island.js";
+import * as Shipyard from "./location/shipyard.js"; // 新しく追加: 造船所モジュール
+import * as Shop from "./location/shop.js"; // 新しく追加: お店モジュール
+
 // インベントリマネージャーモジュールをインポート
 import * as InventoryManager from "./features/inventory/inventoryManager.js";
+// 天候マネージャーモジュールをインポート
+import * as WeatherManager from "./features/weather/weatherManager.js";
+import { weatherIconsSvg } from "./resources/weathers.svg.js"; // weatherManagerに渡すためにインポート
 
 // DOM要素の変数を宣言（初期値はnull）
 let inventoryContainer; // グローバルで宣言
@@ -23,82 +29,48 @@ let infoModalPrices; // 新しく追加：価格表示用の要素
 let gameTimeDisplay;
 let weatherDisplay;
 let weatherIconContainer;
-let weatherIcons; // オブジェクトとして後で初期化
-let healthValueDisplay;
-let healthBar;
+let weatherIcons; // オブジェクトとして後で初期化 (WeatherManagerで管理される)
+let durabilityValueDisplay; // 体力から耐久に変更
+let durabilityBar; // 体力バーから耐久バーに変更
 let fuelValueDisplay;
 let fuelBar;
 let moneyDisplay;
 let messageLog;
 let bagIcon;
-let shipStateDisplay;
 let mainContentText;
 let choicesContainer;
 let mainContentTitle;
 
-// ゲームの状態変数
-const maxHealth = 20;
-let currentHealth = maxHealth;
-const maxFuel = 100; // 新しく追加: 燃料の最大値
-let currentFuel = maxFuel; // 新しく追加: 燃料の初期値を最大値に設定
-let currentMoney = 100000; // お金の初期値を10万に変更
-let shipState = "離船中"; // 初期状態を「離船中」に設定
-let currentLocation = "小さな街"; // 現在の場所を管理。初期値は「小さな街」に固定
+// ゲームの状態変数 (初期値はinitializeGameで設定されるため、ここでは宣言のみ)
+let maxDurability; // 体力から耐久に変更
+let currentDurability; // 体力から耐久に変更
+let maxFuel;
+let currentFuel;
+let currentMoney;
+let shipState;
+let currentLocation;
+let previousLocation;
 
 // ゲーム内時間変数
-let gameHour = 8; // 初期時間: 午前8時
-let gameMinute = 0; // 新しく追加: 分単位
-let gameDay = 1; // 初期日: 1日目
-
-// 天候パターンと対応するアイコンID
-const weatherPatterns = [
-  { name: "晴れ", iconId: "sunny" },
-  { name: "曇り", iconId: "cloudy" },
-  { name: "雨", iconId: "rainy" },
-  { name: "嵐", iconId: "stormy" },
-  { name: "雪", iconId: "snowy" },
-];
+let gameHour;
+let gameMinute;
+let gameDay;
 
 /**
- * 天候をランダムに設定し、表示を更新する関数
+ * 耐久表示を更新する関数
  */
-function setRandomWeather() {
-  const randomIndex = Math.floor(Math.random() * weatherPatterns.length);
-  const selectedWeather = weatherPatterns[randomIndex];
+function updateDurabilityDisplay() {
+  durabilityValueDisplay.textContent = `${currentDurability} / ${maxDurability}`; // 数値表示を追加
+  const durabilityPercentage = (currentDurability / maxDurability) * 100;
+  durabilityBar.style.width = `${durabilityPercentage}%`;
 
-  weatherDisplay.textContent = selectedWeather.name;
-
-  // すべてのアイコンを非表示にする
-  for (const key in weatherIcons) {
-    if (weatherIcons[key]) {
-      // 要素が存在するか確認
-      weatherIcons[key].style.display = "none";
-    }
-  }
-
-  // 選択されたアイコンを表示する
-  if (weatherIcons[selectedWeather.iconId]) {
-    // 要素が存在するか確認
-    weatherIcons[selectedWeather.iconId].style.display = "block";
-  }
-  displayMessage(`天候が「${selectedWeather.name}」になりました。`); // メッセージログに表示
-}
-
-/**
- * 体力表示を更新する関数
- */
-function updateHealthDisplay() {
-  healthValueDisplay.textContent = `${currentHealth} / ${maxHealth}`; // 数値表示を追加
-  const healthPercentage = (currentHealth / maxHealth) * 100;
-  healthBar.style.width = `${healthPercentage}%`;
-
-  // 体力バーの色を変化させる
-  if (healthPercentage > 60) {
-    healthBar.style.backgroundColor = "#27ae60"; // 緑
-  } else if (healthPercentage > 30) {
-    healthBar.style.backgroundColor = "#f39c12"; // オレンジ
+  // 耐久バーの色を変化させる
+  if (durabilityPercentage > 60) {
+    durabilityBar.style.backgroundColor = "#27ae60"; // 緑
+  } else if (durabilityPercentage > 30) {
+    durabilityBar.style.backgroundColor = "#f39c12"; // オレンジ
   } else {
-    healthBar.style.backgroundColor = "#e74c3c"; // 赤
+    durabilityBar.style.backgroundColor = "#e74c3c"; // 赤
   }
 }
 
@@ -129,15 +101,6 @@ function updateMoneyDisplay() {
 }
 
 /**
- * 船の状態表示を更新する関数
- */
-function updateShipStateDisplay() {
-  shipStateDisplay.textContent = shipState;
-  // 船の状態が変わったらメインコンテンツの選択肢も更新
-  updateMainContent();
-}
-
-/**
  * ゲーム内時間を更新し、表示を更新する関数
  */
 function updateGameTimeDisplay() {
@@ -160,7 +123,7 @@ function advanceGameTime(minutes = 1) {
     if (gameHour >= 24) {
       gameHour = 0;
       gameDay++;
-      setRandomWeather(); // 日が変わったら天候もランダムに更新
+      WeatherManager.setRandomWeather(displayMessage); // 日が変わったら天候もランダムに更新
       displayMessage(`新しい日になりました！Day ${gameDay}です。`);
     }
   }
@@ -204,6 +167,7 @@ function toggleModal(modalType, moduleInfo = null) {
   // オーバーレイを一旦閉じる (後で開く必要がある場合のみ開く)
   if (modalOverlay) {
     modalOverlay.style.display = "none";
+    modalOverlay.classList.remove("is-open"); // オーバーレイのis-openクラスも削除
   }
 
   if (modalType === "inventory") {
@@ -212,20 +176,25 @@ function toggleModal(modalType, moduleInfo = null) {
     if (InventoryManager.isInventoryOpen()) {
       // 開いたか確認
       if (modalOverlay) modalOverlay.style.display = "block";
+      if (modalOverlay) modalOverlay.classList.add("is-open"); // オーバーレイにis-openクラスを追加
     }
   } else if (modalType === "info" && moduleInfo) {
     // 情報モーダルを開く
     if (modalOverlay) modalOverlay.style.display = "block";
+    if (modalOverlay) modalOverlay.classList.add("is-open"); // オーバーレイにis-openクラスを追加
     if (infoModalContentWrapper)
       infoModalContentWrapper.classList.add("is-open");
 
     // 街の説明文を設定
     if (infoModalTitle) infoModalTitle.textContent = moduleInfo.getTitle();
-    if (infoModalText) infoModalText.textContent = moduleInfo.getInfo();
+    // ここで gameContext を渡すように修正
+    if (infoModalText)
+      infoModalText.innerHTML = moduleInfo.getMessage(gameContext); // innerHTMLに変更してHTMLタグを解釈
 
     // 価格情報を設定 (getPricesInfo関数が存在する場合のみ)
+    // ここで gameContext を渡すように修正
     if (infoModalPrices && typeof moduleInfo.getPricesInfo === "function") {
-      infoModalPrices.textContent = moduleInfo.getPricesInfo();
+      infoModalPrices.textContent = moduleInfo.getPricesInfo(gameContext);
       infoModalPrices.style.display = "block"; // 表示を有効にする
     } else if (infoModalPrices) {
       infoModalPrices.style.display = "none"; // 価格情報がない場合は非表示にする
@@ -234,129 +203,306 @@ function toggleModal(modalType, moduleInfo = null) {
   // modalType === null の場合は、既に上で全てのモーダルを閉じる処理が行われているため、追加の処理は不要
 }
 
-// ページロード時に初期設定を行う
-window.onload = () => {
-  // DOM要素への参照をここで取得 (constを削除して、グローバル変数に代入する)
-  inventoryContainer = document.getElementById("inventoryContainer");
-  inventoryGrid = document.getElementById("inventoryGrid");
-  availableItemsList = document.getElementById("availableItemsList");
-  itemListTitle = document.querySelector("#itemListArea .item-list-title");
-  inventoryModalContentWrapper = document.getElementById(
-    "inventoryModalContentWrapper"
-  );
-
-  modalOverlay = document.getElementById("modalOverlay");
-  infoModalContentWrapper = document.getElementById("infoModalContentWrapper");
-  infoModalTitle = document.getElementById("infoModalTitle");
-  infoModalText = document.getElementById("infoModalText");
-  infoModalPrices = document.getElementById("infoModalPrices"); // 新しく取得
-  gameTimeDisplay = document.getElementById("gameTimeDisplay");
-  weatherDisplay = document.getElementById("weatherDisplay");
-  weatherIconContainer = document.querySelector(".weather-icon-container");
-  weatherIcons = {
-    sunny: document.getElementById("icon-sunny"),
-    cloudy: document.getElementById("icon-cloudy"),
-    rainy: document.getElementById("icon-rainy"),
-    stormy: document.getElementById("icon-stormy"),
-    snowy: document.getElementById("icon-snowy"),
-  };
-  healthValueDisplay = document.getElementById("healthValue");
-  healthBar = document.getElementById("healthBar");
-  fuelValueDisplay = document.getElementById("fuelValue");
-  fuelBar = document.getElementById("fuelBar");
-  moneyDisplay = document.getElementById("moneyDisplay");
-  messageLog = document.getElementById("messageLog");
-  bagIcon = document.getElementById("bagIcon");
-  shipStateDisplay = document.getElementById("shipStateDisplay");
-  mainContentText = document.getElementById("mainContentText");
-  choicesContainer = document.getElementById("choicesContainer");
-  mainContentTitle = document.getElementById("mainContentTitle");
-
-  // InventoryManagerを初期化し、必要なDOM要素とコールバックを渡す
-  // 引数に初期で使えるカバンのスロット数と、表示するグリッドの総行数・列数を追加したわ！
-  InventoryManager.initInventory(
-    {
-      inventoryGrid,
-      availableItemsList,
-      itemListTitle,
-      inventoryModalContentWrapper,
-    },
-    displayMessage,
-    16,
-    7,
-    7
-  ); // 4x4=16スロットが初期で使える、表示は7x7グリッド
-
-  // ゲーム開始メッセージを最初に表示
-  displayMessage("ゲームが開始されました！");
-
-  // weatherIconsの初期化後にsetRandomWeatherを呼び出す
-  setRandomWeather(); // 天候を設定
-
-  updateHealthDisplay(); // 体力表示を更新
-  updateFuelDisplay(); // 燃料表示を更新
-  updateMoneyDisplay(); // お金表示を更新
-  updateGameTimeDisplay(); // 新しく追加: ゲーム時間表示を更新
-
-  // 初回起動時の「小さな街」の価格を固定で設定する
-  // calculatePricesForVisitに1.0を渡すことで、ランダムではなくベース価格が設定される
-  SmallTown.calculatePricesForVisit(1.0);
-
-  updateShipStateDisplay(); // 船の状態表示を更新（メインコンテンツも更新される）
-  console.log("ゲームがロードされました！");
-
-  // キーが押された時のイベントリスナーを設定
-  document.addEventListener("keydown", (event) => {
-    const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen(); // InventoryManagerから状態を取得
-    const isInfoModalCurrentlyOpen =
-      infoModalContentWrapper.classList.contains("is-open");
-
-    if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
-      // 何らかのモーダルが開いている場合
-      if (event.key === "e") {
-        if (isInventoryCurrentlyOpen) {
-          // インベントリが開いている場合はEで閉じる
-          event.preventDefault();
-          toggleModal(null); // 全てのモーダルを閉じる
-        } else if (isInfoModalCurrentlyOpen) {
-          // 情報モーダルが開いている場合はEを押しても何もしない（ショートカット無効）
-          event.preventDefault();
-        }
-      } else {
-        // E以外のキーが押された場合は、全てのショートカットを無効にする
-        event.preventDefault();
-      }
-    } else {
-      // モーダルが何も開いていない場合
-      if (event.key === "e") {
-        event.preventDefault();
-        toggleModal("inventory"); // インベントリを開く
-      }
-      // 他のキーは通常通り動作させる（event.preventDefault()を呼ばない）
+// ゲームのコンテキストオブジェクト
+// ロケーションモジュールからアクセスできるように、必要な状態と関数をまとめる
+const gameContext = {
+  // 状態
+  get currentDurability() {
+    // 体力から耐久に変更
+    return currentDurability;
+  },
+  set currentDurability(value) {
+    // 体力から耐久に変更
+    currentDurability = value;
+    updateDurabilityDisplay(); // 体力表示から耐久表示に変更
+  },
+  get maxDurability() {
+    // 体力から耐久に変更
+    return maxDurability;
+  },
+  get currentFuel() {
+    return currentFuel;
+  },
+  set currentFuel(value) {
+    currentFuel = value;
+    updateFuelDisplay();
+  },
+  get maxFuel() {
+    return maxFuel;
+  },
+  get currentMoney() {
+    return currentMoney;
+  },
+  set currentMoney(value) {
+    currentMoney = value;
+    updateMoneyDisplay();
+  },
+  get shipState() {
+    return shipState;
+  },
+  set shipState(value) {
+    shipState = value;
+  },
+  get currentLocation() {
+    return currentLocation;
+  },
+  set currentLocation(value) {
+    // 場所が変わる前にpreviousLocationを更新
+    if (currentLocation !== value) {
+      previousLocation = currentLocation;
     }
-  });
+    currentLocation = value;
+    updateMainContent(); // 場所が変わったらメインコンテンツを更新
 
-  // バッグアイコンがクリックされた時のイベントを追加
-  bagIcon.addEventListener("click", () => {
-    toggleModal("inventory"); // インベントリの表示/非表示を切り替える
-  });
-
-  // モーダルオーバーレイがクリックされた時のイベントを追加
-  modalOverlay.addEventListener("click", (event) => {
-    // モーダルコンテンツ自体がクリックされた場合は閉じないようにする
-    // InventoryManager.isInventoryOpen() を使って、現在インベントリが開いているか確認
-    const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
-    const isInfoModalCurrentlyOpen =
-      infoModalContentWrapper.classList.contains("is-open");
-
-    if (event.target === modalOverlay) {
-      // インベントリまたは情報モーダルが開いている場合のみ閉じる
-      if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
-        toggleModal(null); // 全てのモーダルを閉じる
-      }
+    // 新しい場所が街または島の場合、船の状態を「離船中」に設定
+    if (
+      currentLocation === "小さな街" ||
+      currentLocation === "大きな街" ||
+      currentLocation === "無人島"
+    ) {
+      gameContext.shipState = "離船中"; // ここで船の状態を「離船中」に設定
+    } else if (currentLocation === "造船所") {
+      // 造船所の場合
+      gameContext.shipState = "停泊中"; // 造船所では停泊中に設定
+    } else if (currentLocation === "飛行船") {
+      // 飛行船に戻った場合
+      gameContext.shipState = "離船中"; // 飛行船では離船中に設定
+    } else if (currentLocation === "お店") {
+      // お店の場合
+      gameContext.shipState = "停泊中"; // お店では停泊中に設定
     }
-  });
+
+    // 街のモジュールにcalculatePricesForVisit関数があれば呼び出す
+    let currentModule;
+    if (currentLocation === "小さな街") {
+      currentModule = SmallTown;
+    } else if (currentLocation === "大きな街") {
+      currentModule = LargeTown;
+    } else if (currentLocation === "造船所") {
+      currentModule = Shipyard; // 造船所の場合
+    } else if (currentLocation === "お店") {
+      // お店の場合
+      currentModule = Shop;
+    }
+
+    // 各ロケーションに遷移した際の価格計算ロジックを修正
+    if (currentLocation === "小さな街" && previousLocation === "飛行船") {
+      // 飛行船から小さな街に停泊した場合のみ、小さな街の価格を再計算
+      SmallTown.calculatePricesForVisit(null, gameContext);
+    } else if (
+      currentLocation === "大きな街" &&
+      previousLocation === "飛行船"
+    ) {
+      // 飛行船から大きな街に停泊した場合のみ、大きな街の価格を再計算
+      LargeTown.calculatePricesForVisit(null, gameContext);
+    } else if (
+      currentLocation === "お店" &&
+      (previousLocation === "小さな街" || previousLocation === "大きな街")
+    ) {
+      // 街からお店に移動した場合、街で計算された価格倍率をお店に渡す
+      let priceMultiplierToPass = null;
+      if (previousLocation === "小さな街") {
+        const smallTownPrices = SmallTown.getCurrentVisitPrices();
+        priceMultiplierToPass = smallTownPrices.priceMultiplier;
+      } else if (previousLocation === "大きな街") {
+        const largeTownPrices = LargeTown.getCurrentVisitPrices();
+        priceMultiplierToPass = largeTownPrices.priceMultiplier;
+      }
+      Shop.calculatePricesForVisit(priceMultiplierToPass, gameContext);
+    } else if (
+      currentLocation === "造船所" &&
+      previousLocation === "小さな街"
+    ) {
+      // 小さな街から造船所に移動した場合、小さな街の価格倍率を造船所に渡す
+      const smallTownPrices = SmallTown.getCurrentVisitPrices();
+      Shipyard.calculatePricesForVisit(
+        smallTownPrices.priceMultiplier,
+        gameContext
+      );
+    }
+    // その他の場所への移動では価格を更新しない
+  },
+  // previousLocation のゲッターとセッターを追加
+  get previousLocation() {
+    return previousLocation;
+  },
+  set previousLocation(value) {
+    previousLocation = value;
+  },
+  get bagInventory() {
+    return InventoryManager.inventoryData.bagInventory;
+  },
+  get shipContainerInventory() {
+    return InventoryManager.inventoryData.shipContainerInventory;
+  },
+  get maxItemTypesInBag() {
+    return InventoryManager.inventoryData.maxItemTypesInBag;
+  },
+
+  // 関数
+  displayMessage: displayMessage,
+  updateDurabilityDisplay: updateDurabilityDisplay, // 体力表示から耐久表示に変更
+  updateFuelDisplay: updateFuelDisplay,
+  updateMoneyDisplay: updateMoneyDisplay,
+  advanceGameTime: advanceGameTime,
+  startIslandExploration: startIslandExploration,
+  startAirshipExploration: startAirshipExploration,
+  startStrollExploration: startStrollExploration, // 新しく追加: 散策探索開始関数
+  getRandomTownType: getRandomTownType,
+  updateMainContent: updateMainContent, // 循環参照になるが、現状は必要
+  disableAllButtons: () => {
+    const allButtons = choicesContainer.querySelectorAll("button");
+    allButtons.forEach((button) => (button.disabled = true));
+  },
+  enableAllButtons: () => {
+    const allButtons = choicesContainer.querySelectorAll("button");
+    allButtons.forEach((button) => (button.disabled = false));
+  },
+  // InventoryManagerからアイテム追加関数を公開
+  addItemToBag: InventoryManager.addItemToBag,
+  addItemToShipContainer: InventoryManager.addItemToShipContainer,
+  getUniqueItemTypesCountInBag: InventoryManager.getUniqueItemTypesCountInBag,
+  // 新しく追加: 場所の情報を表示する関数 (モーダル表示に切り替え)
+  displayLocationInfo: (module) => {
+    toggleModal("info", module);
+  },
 };
+
+/**
+ * メインコンテンツエリアのテキストと選択肢を更新する関数
+ */
+function updateMainContent() {
+  choicesContainer.innerHTML = ""; // 既存の選択肢をクリア
+
+  // 現在の場所に基づいて適切なロケーションモジュールを選択
+  let currentModule;
+  if (currentLocation === "飛行船") {
+    // 現在地が「飛行船」の場合
+    currentModule = Airship;
+  } else if (currentLocation === "大きな街") {
+    currentModule = LargeTown;
+  } else if (currentLocation === "小さな街") {
+    currentModule = SmallTown;
+  } else if (currentLocation === "無人島") {
+    currentModule = Island;
+  } else if (currentLocation === "造船所") {
+    // 新しく追加: 造船所
+    currentModule = Shipyard;
+  } else if (currentLocation === "お店") {
+    // 新しく追加: お店
+    currentModule = Shop;
+  } else {
+    // 未定義の場所の場合のフォールバック
+    console.error("Unknown location:", currentLocation);
+    mainContentTitle.textContent = "不明な場所";
+    mainContentText.innerHTML = "<p>現在地が不明です。</p>";
+    return;
+  }
+
+  // ロケーションモジュールから情報を取得して表示を更新
+  mainContentTitle.innerHTML = ""; // タイトル要素をクリア
+  const titleTextSpan = document.createElement("span");
+  titleTextSpan.textContent = currentModule.getTitle();
+  mainContentTitle.appendChild(titleTextSpan);
+
+  // 「i」ボタンを作成して追加
+  const infoButton = document.createElement("button");
+  infoButton.classList.add("info-button");
+  infoButton.innerHTML = `
+        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+    `;
+  infoButton.addEventListener("click", () => {
+    gameContext.displayLocationInfo(currentModule); // 街の情報を表示
+  });
+  // 飛行船の場所では情報ボタンを表示しない
+  if (currentLocation !== "飛行船") {
+    mainContentTitle.appendChild(infoButton);
+  }
+
+  // currentModule.getMessage() に gameContext を渡すように修正
+  // mainContentText.innerHTML = currentModule.getMessage(gameContext); // この行は削除またはコメントアウト
+
+  // メインコンテンツテキストを更新
+  const messageContent = currentModule.getMessage(gameContext);
+  if (messageContent) {
+    mainContentText.innerHTML = messageContent;
+  } else {
+    mainContentText.innerHTML = ""; // メッセージがない場合はクリア
+  }
+
+  // 行動セクションを動的に生成
+  // currentModule.getActions() に gameContext を渡すように修正
+  const actions = currentModule.getActions(gameContext);
+  actions.forEach((section) => {
+    // サブタイトルがnullでない場合のみh4要素を作成
+    if (section.subtitle !== null) {
+      const sectionTitle = document.createElement("h4");
+      sectionTitle.textContent = section.subtitle;
+      sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
+      choicesContainer.appendChild(sectionTitle);
+    }
+
+    const buttonsWrapper = document.createElement("div");
+    // サブタイトルがnullの場合は、特殊なクラスを追加してスタイル調整できるようにする
+    if (section.subtitle === null) {
+      buttonsWrapper.classList.add("no-subtitle-buttons-wrapper");
+    } else {
+      buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
+    }
+
+    choicesContainer.appendChild(buttonsWrapper);
+
+    // ボタンがある場合はボタンを生成
+    if (section.buttons && section.buttons.length > 0) {
+      section.buttons.forEach((buttonInfo) => {
+        createChoiceButton(
+          buttonInfo.text,
+          () => currentModule.executeAction(buttonInfo.actionName, gameContext),
+          buttonInfo.className,
+          buttonsWrapper,
+          buttonInfo.disabledCondition
+            ? buttonInfo.disabledCondition(gameContext)
+            : false // disabledConditionを評価
+        );
+      });
+    } else if (section.message) {
+      // ボタンがなく、メッセージがある場合はテキストを表示
+      const messageElement = document.createElement("p");
+      messageElement.textContent = section.message.text;
+      messageElement.classList.add(
+        section.message.className || "no-action-message"
+      ); // クラスを追加
+      buttonsWrapper.appendChild(messageElement);
+    }
+  });
+}
+
+/**
+ * 選択肢ボタンを作成し、指定されたコンテナに追加するヘルパー関数
+ * @param {string} text - ボタンのテキスト
+ * @param {function} onClickHandler - ボタンがクリックされた時の処理
+ * @param {string} [className='choice-button-default'] - 追加するCSSクラス名
+ * @param {HTMLElement} [container=choicesContainer] - ボタンを追加するコンテナ要素
+ * @param {boolean} [disabled=false] - ボタンを無効にするかどうか
+ */
+function createChoiceButton(
+  text,
+  onClickHandler,
+  className = "choice-button-default",
+  container = choicesContainer,
+  disabled = false
+) {
+  const button = document.createElement("button");
+  button.classList.add("choice-button", className); // 基本クラスと指定されたクラスを追加
+  button.textContent = text;
+  button.addEventListener("click", onClickHandler);
+  button.disabled = disabled; // disabled属性を設定
+  container.appendChild(button); // 指定されたコンテナに追加
+}
 
 /**
  * 無人島での探索を開始する関数
@@ -536,221 +682,169 @@ function getRandomTownType() {
 }
 
 /**
- * ゲームのコンテキストオブジェクト
- * ロケーションモジュールからアクセスできるように、必要な状態と関数をまとめる
+ * ゲームの初期化処理
+ * 保存済みデータがあればそれをロードし、なければデフォルト値で初期化する
  */
-const gameContext = {
-  // 状態
-  get currentHealth() {
-    return currentHealth;
-  },
-  set currentHealth(value) {
-    currentHealth = value;
-    updateHealthDisplay();
-  },
-  get maxHealth() {
-    return maxHealth;
-  },
-  get currentFuel() {
-    return currentFuel;
-  },
-  set currentFuel(value) {
-    currentFuel = value;
-    updateFuelDisplay();
-  },
-  get maxFuel() {
-    return maxFuel;
-  },
-  get currentMoney() {
-    return currentMoney;
-  },
-  set currentMoney(value) {
-    currentMoney = value;
-    updateMoneyDisplay();
-  },
-  get shipState() {
-    return shipState;
-  },
-  set shipState(value) {
-    shipState = value;
-    updateShipStateDisplay();
-  },
-  get currentLocation() {
-    return currentLocation;
-  },
-  set currentLocation(value) {
-    currentLocation = value;
-    updateMainContent(); // 場所が変わったらメインコンテンツを更新
+function initializeGame() {
+  // TODO: 保存済みデータのロード処理をここに実装
+  // 例: const savedData = loadGameData();
+  const savedData = null; // 今はセーブ機能がないのでnullとする
 
-    // 新しい場所が街または島の場合、船の状態を「離船中」に設定
-    if (
-      currentLocation === "小さな街" ||
-      currentLocation === "大きな街" ||
-      currentLocation === "無人島"
-    ) {
-      gameContext.shipState = "離船中"; // ここで船の状態を「離船中」に設定
-    }
-
-    // 街のモジュールにcalculatePricesForVisit関数があれば呼び出す
-    let currentModule;
-    if (currentLocation === "小さな街") {
-      currentModule = SmallTown;
-    } else if (currentLocation === "大きな街") {
-      currentModule = LargeTown;
-    }
-
-    if (
-      currentModule &&
-      typeof currentModule.calculatePricesForVisit === "function"
-    ) {
-      currentModule.calculatePricesForVisit(); // 引数なしで呼び出し、ランダムな倍率を適用
-    }
-  },
-  get bagInventory() {
-    return InventoryManager.inventoryData.bagInventory;
-  },
-  get shipContainerInventory() {
-    return InventoryManager.inventoryData.shipContainerInventory;
-  },
-  get maxItemTypesInBag() {
-    return InventoryManager.inventoryData.maxItemTypesInBag;
-  },
-
-  // 関数
-  displayMessage: displayMessage,
-  updateHealthDisplay: updateHealthDisplay,
-  updateFuelDisplay: updateFuelDisplay,
-  updateMoneyDisplay: updateMoneyDisplay,
-  updateShipStateDisplay: updateShipStateDisplay,
-  advanceGameTime: advanceGameTime,
-  startIslandExploration: startIslandExploration,
-  startAirshipExploration: startAirshipExploration,
-  startStrollExploration: startStrollExploration, // 新しく追加: 散策探索開始関数
-  getRandomTownType: getRandomTownType,
-  updateMainContent: updateMainContent, // 循環参照になるが、現状は必要
-  disableAllButtons: () => {
-    const allButtons = choicesContainer.querySelectorAll("button");
-    allButtons.forEach((button) => (button.disabled = true));
-  },
-  enableAllButtons: () => {
-    const allButtons = choicesContainer.querySelectorAll("button");
-    allButtons.forEach((button) => (button.disabled = false));
-  },
-  // InventoryManagerからアイテム追加関数を公開
-  addItemToBag: InventoryManager.addItemToBag,
-  addItemToShipContainer: InventoryManager.addItemToShipContainer,
-  getUniqueItemTypesCountInBag: InventoryManager.getUniqueItemTypesCountInBag,
-  // 新しく追加: 場所の情報を表示する関数 (モーダル表示に切り替え)
-  displayLocationInfo: (module) => {
-    toggleModal("info", module);
-  },
-};
-
-/**
- * メインコンテンツエリアのテキストと選択肢を更新する関数
- */
-function updateMainContent() {
-  choicesContainer.innerHTML = ""; // 既存の選択肢をクリア
-
-  // 現在の場所に基づいて適切なロケーションモジュールを選択
-  let currentModule;
-  if (currentLocation === "飛行船") {
-    // 現在地が「飛行船」の場合
-    currentModule = Airship;
-  } else if (currentLocation === "大きな街") {
-    currentModule = LargeTown;
-  } else if (currentLocation === "小さな街") {
-    currentModule = SmallTown;
-  } else if (currentLocation === "無人島") {
-    currentModule = Island;
+  if (savedData) {
+    // TODO: 保存済みデータでゲーム状態を復元する
+    console.log("保存済みデータをロードしました。");
+    // currentDurability = savedData.durability;
+    // currentFuel = savedData.fuel;
+    // ...
   } else {
-    // 未定義の場所の場合のフォールバック
-    console.error("Unknown location:", currentLocation);
-    mainContentTitle.textContent = "不明な場所";
-    mainContentText.innerHTML = "<p>現在地が不明です。</p>";
-    return;
+    // デフォルト値で初期化
+    maxDurability = 20; // 体力から耐久に変更
+    currentDurability = maxDurability; // 体力から耐久に変更
+    maxFuel = 100;
+    currentFuel = maxFuel;
+    currentMoney = 100000;
+    shipState = "離船中";
+    currentLocation = "小さな街";
+    previousLocation = "飛行船";
+    gameHour = 8;
+    gameMinute = 0;
+    gameDay = 1;
+
+    // 初回起動時の「小さな街」の価格設定
+    SmallTown.calculatePricesForVisit(null, gameContext); // gameContextを渡す
+    // LargeTownもここで初期化する必要がある場合は追加
+    LargeTown.calculatePricesForVisit(null, gameContext);
+
+    console.log("新しいゲームを開始しました。");
   }
 
-  // ロケーションモジュールから情報を取得して表示を更新
-  mainContentTitle.innerHTML = ""; // タイトル要素をクリア
-  const titleTextSpan = document.createElement("span");
-  titleTextSpan.textContent = currentModule.getTitle();
-  mainContentTitle.appendChild(titleTextSpan);
+  // 初期表示の更新
+  // ここでDOM要素が確実に取得されていることを前提とする
+  updateDurabilityDisplay(); // 体力表示から耐久表示に変更
+  updateFuelDisplay();
+  updateMoneyDisplay();
+  updateGameTimeDisplay();
+  WeatherManager.setRandomWeather(displayMessage, true); // 天候を設定（メッセージ抑制）
+  updateMainContent(); // メインコンテンツを初期表示
+  gameContext.displayMessage("ゲームを開始しました！小さな街に到着しました。");
+}
 
-  // 「i」ボタンを作成して追加
-  const infoButton = document.createElement("button");
-  infoButton.classList.add("info-button");
-  infoButton.innerHTML = `
-        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-        </svg>
-    `;
-  infoButton.addEventListener("click", () => {
-    gameContext.displayLocationInfo(currentModule); // 街の情報を表示
-  });
-  // 飛行船の場所では情報ボタンを表示しない
-  if (currentLocation !== "飛行船") {
-    mainContentTitle.appendChild(infoButton);
-  }
+// ページロード時に初期設定を行う
+window.onload = () => {
+  // 1. すべてのDOM要素への参照をここで取得
+  inventoryContainer = document.getElementById("inventoryContainer");
+  inventoryGrid = document.getElementById("inventoryGrid");
+  modalOverlay = document.getElementById("modalOverlay");
+  inventoryModalContentWrapper = document.getElementById(
+    "inventoryModalContentWrapper"
+  );
+  itemListArea = document.getElementById("itemListArea");
+  availableItemsList = document.getElementById("availableItemsList");
+  itemListTitle = document.querySelector("#itemListArea .item-list-title");
+  infoModalContentWrapper = document.getElementById("infoModalContentWrapper");
+  infoModalTitle = document.getElementById("infoModalTitle");
+  infoModalText = document.getElementById("infoModalText");
+  infoModalPrices = document.getElementById("infoModalPrices");
+  gameTimeDisplay = document.getElementById("gameTimeDisplay");
+  weatherDisplay = document.getElementById("weatherDisplay");
+  weatherIconContainer = document.querySelector(".weather-icon-container");
+  durabilityValueDisplay = document.getElementById("durabilityValue");
+  durabilityBar = document.getElementById("durabilityBar");
+  fuelValueDisplay = document.getElementById("fuelValue");
+  fuelBar = document.getElementById("fuelBar");
+  moneyDisplay = document.getElementById("moneyDisplay");
+  messageLog = document.getElementById("messageLog");
+  bagIcon = document.getElementById("bagIcon");
+  mainContentText = document.getElementById("mainContentText");
+  choicesContainer = document.getElementById("choicesContainer");
+  mainContentTitle = document.getElementById("mainContentTitle");
 
-  mainContentText.innerHTML = currentModule.getMessage();
+  // 2. 各マネージャーの初期化 (DOM要素が揃った後)
+  WeatherManager.initWeather(
+    { weatherDisplay, weatherIconContainer },
+    weatherIconsSvg
+  );
+  InventoryManager.initInventory(
+    {
+      inventoryGrid,
+      availableItemsList,
+      itemListTitle,
+      inventoryModalContentWrapper,
+    },
+    displayMessage,
+    16,
+    7,
+    7,
+    true
+  );
 
-  // 行動セクションを動的に生成
-  const actions = currentModule.getActions();
-  actions.forEach((section) => {
-    // サブタイトルがnullでない場合のみh4要素を作成
-    if (section.subtitle !== null) {
-      const sectionTitle = document.createElement("h4");
-      sectionTitle.textContent = section.subtitle;
-      sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
-      choicesContainer.appendChild(sectionTitle);
-    }
+  // 3. ゲーム全体の初期化 (すべての準備が整った後)
+  initializeGame();
 
-    const buttonsWrapper = document.createElement("div");
-    // サブタイトルがnullの場合は、特殊なクラスを追加してスタイル調整できるようにする
-    if (section.subtitle === null) {
-      buttonsWrapper.classList.add("no-subtitle-buttons-wrapper");
+  // 4. イベントリスナーの設定
+  document.addEventListener("keydown", (event) => {
+    const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
+    const isInfoModalCurrentlyOpen =
+      infoModalContentWrapper.classList.contains("is-open");
+
+    if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+      if (event.key === "e") {
+        if (isInventoryCurrentlyOpen) {
+          event.preventDefault();
+          toggleModal(null);
+        } else if (isInfoModalCurrentlyOpen) {
+          event.preventDefault();
+        }
+      } else if (event.key === "i") {
+        if (isInfoModalCurrentlyOpen) {
+          event.preventDefault();
+          toggleModal(null);
+        } else {
+          event.preventDefault();
+        }
+      } else {
+        event.preventDefault();
+      }
     } else {
-      buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
+      if (event.key === "e") {
+        event.preventDefault();
+        toggleModal("inventory");
+      } else if (event.key === "i") {
+        event.preventDefault();
+        let currentModule;
+        if (currentLocation === "飛行船") {
+          currentModule = Airship;
+        } else if (currentLocation === "大きな街") {
+          currentModule = LargeTown;
+        } else if (currentLocation === "小さな街") {
+          currentModule = SmallTown;
+        } else if (currentLocation === "無人島") {
+          currentModule = Island;
+        } else if (currentLocation === "造船所") {
+          currentModule = Shipyard;
+        } else if (currentLocation === "お店") {
+          currentModule = Shop;
+        }
+        if (currentLocation !== "飛行船" && currentModule) {
+          toggleModal("info", currentModule);
+        }
+      }
     }
-
-    choicesContainer.appendChild(buttonsWrapper);
-
-    section.buttons.forEach((buttonInfo) => {
-      createChoiceButton(
-        buttonInfo.text,
-        () => currentModule.executeAction(buttonInfo.actionName, gameContext),
-        buttonInfo.className,
-        buttonsWrapper,
-        buttonInfo.disabledCondition
-          ? buttonInfo.disabledCondition(gameContext)
-          : false // disabledConditionを評価
-      );
-    });
   });
-}
 
-/**
- * 選択肢ボタンを作成し、指定されたコンテナに追加するヘルパー関数
- * @param {string} text - ボタンのテキスト
- * @param {function} onClickHandler - ボタンがクリックされた時の処理
- * @param {string} [className='choice-button-default'] - 追加するCSSクラス名
- * @param {HTMLElement} [container=choicesContainer] - ボタンを追加するコンテナ要素
- * @param {boolean} [disabled=false] - ボタンを無効にするかどうか
- */
-function createChoiceButton(
-  text,
-  onClickHandler,
-  className = "choice-button-default",
-  container = choicesContainer,
-  disabled = false
-) {
-  const button = document.createElement("button");
-  button.classList.add("choice-button", className); // 基本クラスと指定されたクラスを追加
-  button.textContent = text;
-  button.addEventListener("click", onClickHandler);
-  button.disabled = disabled; // disabled属性を設定
-  container.appendChild(button); // 指定されたコンテナに追加
-}
+  bagIcon.addEventListener("click", () => {
+    toggleModal("inventory");
+  });
+
+  modalOverlay.addEventListener("click", (event) => {
+    const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
+    const isInfoModalCurrentlyOpen =
+      infoModalContentWrapper.classList.contains("is-open");
+
+    if (event.target === modalOverlay) {
+      if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+        toggleModal(null);
+      }
+    }
+  });
+};
