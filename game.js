@@ -5,47 +5,36 @@ import * as SmallTown from "./location/smallTown.js";
 import * as LargeTown from "./location/largeTown.js";
 import * as Airship from "./location/airship.js";
 import * as Island from "./location/island.js";
+// インベントリマネージャーモジュールをインポート
+import * as InventoryManager from "./features/inventory/inventoryManager.js";
 
-// インベントリコンテナとグリッド要素を取得
-const inventoryContainer = document.getElementById("inventoryContainer");
-const inventoryGrid = document.getElementById("inventoryGrid");
-// 船体コンテナのサイズを4x4に変更
-const inventoryRows = 4;
-const inventoryCols = 4;
-
-// モーダルオーバーレイとアイテム一覧エリア、モーダルコンテンツラッパーを取得
-const modalOverlay = document.getElementById("modalOverlay");
-const itemListArea = document.getElementById("itemListArea"); // このエリアがカバンを表示する
-const availableItemsList = document.getElementById("availableItemsList"); // カバンの中身を表示するUL
-const modalContentWrapper = document.getElementById("modalContentWrapper");
-const itemListTitle = document.querySelector("#itemListArea .item-list-title"); // カバンエリアのタイトル要素を取得
-
-// ゲーム情報要素を取得
-const gameTimeDisplay = document.getElementById("gameTimeDisplay"); // 新しく追加: ゲーム時間表示要素を取得
-const weatherDisplay = document.getElementById("weatherDisplay");
-const weatherIconContainer = document.querySelector(".weather-icon-container"); // 天候アイコンコンテナ
-const weatherIcons = {
-  // 各天候アイコンの要素をIDで取得
-  sunny: document.getElementById("icon-sunny"),
-  cloudy: document.getElementById("icon-cloudy"),
-  rainy: document.getElementById("icon-rainy"),
-  stormy: document.getElementById("icon-stormy"),
-  snowy: document.getElementById("icon-snowy"),
-};
-
-const healthValueDisplay = document.getElementById("healthValue");
-const healthBar = document.getElementById("healthBar");
-const fuelValueDisplay = document.getElementById("fuelValue"); // 新しく追加: 燃料数値表示要素を取得
-const fuelBar = document.getElementById("fuelBar"); // 新しく追加: 燃料バー要素を取得
-const moneyDisplay = document.getElementById("moneyDisplay"); // お金表示要素を取得
-const messageLog = document.getElementById("messageLog"); // メッセージログ要素を取得
-const bagIcon = document.getElementById("bagIcon"); // 新しく追加: バッグアイコン要素を取得
-const shipStateDisplay = document.getElementById("shipStateDisplay"); // 新しく追加: 船の状態表示要素を取得
-
-// メインコンテンツエリアの要素を取得
-const mainContentText = document.getElementById("mainContentText");
-const choicesContainer = document.getElementById("choicesContainer");
-const mainContentTitle = document.querySelector(".main-content-title"); // メインコンテンツタイトル要素を取得
+// DOM要素の変数を宣言（初期値はnull）
+let inventoryContainer; // グローバルで宣言
+let inventoryGrid; // グローバルで宣言
+let modalOverlay;
+let inventoryModalContentWrapper; // グローバルで宣言
+let itemListArea;
+let availableItemsList; // グローバルで宣言
+let itemListTitle; // グローバルで宣言
+let infoModalContentWrapper;
+let infoModalTitle;
+let infoModalText;
+let infoModalPrices; // 新しく追加：価格表示用の要素
+let gameTimeDisplay;
+let weatherDisplay;
+let weatherIconContainer;
+let weatherIcons; // オブジェクトとして後で初期化
+let healthValueDisplay;
+let healthBar;
+let fuelValueDisplay;
+let fuelBar;
+let moneyDisplay;
+let messageLog;
+let bagIcon;
+let shipStateDisplay;
+let mainContentText;
+let choicesContainer;
+let mainContentTitle;
 
 // ゲームの状態変数
 const maxHealth = 20;
@@ -69,189 +58,6 @@ const weatherPatterns = [
   { name: "嵐", iconId: "stormy" },
   { name: "雪", iconId: "snowy" },
 ];
-
-// 全てのアイテム定義のリスト（ショップなどで入手可能なアイテムのマスターリスト）
-const allItemDefinitions = [
-  { name: "修理キット", size: { width: 3, height: 3 }, stackLimit: 5 },
-  { name: "燃料タンク", size: { width: 3, height: 3 }, stackLimit: 10 },
-  { name: "食料パック", size: { width: 2, height: 2 }, stackLimit: 20 },
-  { name: "地図", size: { width: 1, height: 1 }, stackLimit: 1 },
-  { name: "望遠鏡", size: { width: 1, height: 1 }, stackLimit: 1 },
-  { name: "ロープ", size: { width: 2, height: 1 }, stackLimit: 10 },
-  { name: "懐中電灯", size: { width: 1, height: 1 }, stackLimit: 1 },
-  { name: "水筒", size: { width: 1, height: 1 }, stackLimit: 5 },
-  { name: "予備の部品", size: { width: 2, height: 2 }, stackLimit: 10 },
-  { name: "コンパス", size: { width: 1, height: 1 }, stackLimit: 1 },
-];
-
-// プレイヤーがカバンに所持しているアイテムのリスト
-// 各アイテムは { name: string, quantity: number, stackLimit: number, size: object } の形式
-let bagInventory = [
-  {
-    name: "修理キット",
-    quantity: 3,
-    stackLimit: 5,
-    size: { width: 3, height: 3 },
-  },
-  {
-    name: "燃料タンク",
-    quantity: 3,
-    stackLimit: 10,
-    size: { width: 3, height: 3 },
-  },
-];
-
-// 船体コンテナに所持しているアイテムのリスト
-let shipContainerInventory = []; // 初期は空
-
-// カバンに持てるアイテムの種類数の上限
-const maxItemTypesInBag = 6;
-
-/**
- * インベントリセルを動的に生成する関数
- * インベントリの行数と列数に基づいて、必要な数のセルを作成し、グリッドに追加します。
- * この関数は、アイテムの配置ロジックは含まず、グリッドの枠のみを作成します。
- */
-function createInventoryCells() {
-  inventoryGrid.innerHTML = ""; // 既存のセルをクリア
-  for (let i = 0; i < inventoryRows * inventoryCols; i++) {
-    const cell = document.createElement("div");
-    cell.classList.add("inventory-cell");
-    inventoryGrid.appendChild(cell);
-  }
-}
-
-/**
- * プレイヤーのカバンの中身をアイテム一覧エリアに表示する関数
- */
-function updateBagDisplay() {
-  availableItemsList.innerHTML = ""; // 既存のリストをクリア
-
-  bagInventory.forEach((item) => {
-    const listItem = document.createElement("li");
-    listItem.innerHTML = `<span>${item.name}</span><span class="item-quantity">x${item.quantity}</span>`;
-    // カバン内のアイテムをクリックした時の処理（例：船体コンテナへ移動など）は後で実装
-    listItem.addEventListener("click", () => {
-      displayMessage(`${item.name} をカバンから選択しました。`);
-      // ここにアイテム使用や移動のロジックを実装
-    });
-    availableItemsList.appendChild(listItem);
-  });
-
-  // カバンタイトルの更新 (所持アイテム種類数/カバン上限)
-  const currentUniqueTypes = getUniqueItemTypesCountInBag();
-  itemListTitle.innerHTML = `カバン (${currentUniqueTypes}/${maxItemTypesInBag})<span class="inventory-open-key">(E)</span>`; // (E)の位置を移動
-}
-
-/**
- * 船体コンテナの中身をグリッドに表示する関数
- * 現状は簡易表示で、アイテムのサイズは考慮せず、最初のセルから順に表示します。
- */
-function updateShipContainerDisplay() {
-  const cells = inventoryGrid.querySelectorAll(".inventory-cell");
-  cells.forEach((cell) => {
-    cell.innerHTML = ""; // 各セルの内容をクリア
-    cell.style.backgroundColor = "#2c3e50"; // デフォルトの背景色に戻す
-  });
-
-  shipContainerInventory.forEach((item, index) => {
-    if (cells[index]) {
-      // 適切なセルが存在する場合
-      cells[
-        index
-      ].innerHTML = `<span>${item.name}</span><span class="item-quantity">x${item.quantity}</span>`;
-      cells[index].style.backgroundColor = "#4a627a"; // アイテムがあるセルの色
-      // 船体コンテナ内のアイテムをクリックした時の処理（例：カバンへ移動など）は後で実装
-      cells[index].addEventListener("click", () => {
-        displayMessage(`${item.name} を船体コンテナから選択しました。`);
-        // ここにアイテム使用や移動のロジックを実装
-      });
-    }
-  });
-}
-
-/**
- * プレイヤーのカバンにアイテムを追加する関数
- * @param {Object} itemDefinition - 追加するアイテムの定義（name, stackLimit, sizeなど）
- * @param {number} quantityToAdd - 追加する数量
- * @returns {boolean} - 追加に成功したかどうか
- */
-function addItemToBag(itemDefinition, quantityToAdd) {
-  // 既存のアイテムを探す
-  const existingItem = bagInventory.find(
-    (item) => item.name === itemDefinition.name
-  );
-
-  if (existingItem) {
-    // 既存のアイテムがある場合、スタック上限をチェック
-    if (existingItem.quantity + quantityToAdd <= existingItem.stackLimit) {
-      existingItem.quantity += quantityToAdd;
-      return true;
-    } else {
-      displayMessage(`${itemDefinition.name} のスタック上限に達しています。`);
-      return false;
-    }
-  } else {
-    // 新しいアイテムの場合、種類数の上限をチェック
-    if (getUniqueItemTypesCountInBag() < maxItemTypesInBag) {
-      // 新しいアイテムをbagInventoryに追加（quantityはquantityToAddで初期化）
-      bagInventory.push({
-        name: itemDefinition.name,
-        quantity: quantityToAdd,
-        stackLimit: itemDefinition.stackLimit,
-        size: itemDefinition.size, // サイズ情報も保持
-      });
-      return true;
-    } else {
-      displayMessage("カバンがアイテムの種類数上限に達しています。");
-      return false;
-    }
-  }
-}
-
-/**
- * 船体コンテナにアイテムを追加する関数
- * @param {Object} itemDefinition - 追加するアイテムの定義（name, stackLimit, sizeなど）
- * @param {number} quantityToAdd - 追加する数量
- * @returns {boolean} - 追加に成功したかどうか
- */
-function addItemToShipContainer(itemDefinition, quantityToAdd) {
-  // 既存のアイテムを探す
-  const existingItem = shipContainerInventory.find(
-    (item) => item.name === itemDefinition.name
-  );
-
-  if (existingItem) {
-    // 既存のアイテムがある場合、スタック上限をチェック
-    if (existingItem.quantity + quantityToAdd <= existingItem.stackLimit) {
-      existingItem.quantity += quantityToAdd;
-      return true;
-    } else {
-      displayMessage(
-        `${itemDefinition.name} のスタック上限に達しています。（船体コンテナ）`
-      );
-      return false;
-    }
-  } else {
-    // 新しいアイテムをshipContainerInventoryに追加
-    // 船体コンテナには種類数の上限は設けない（現状）
-    shipContainerInventory.push({
-      name: itemDefinition.name,
-      quantity: quantityToAdd,
-      stackLimit: itemDefinition.stackLimit,
-      size: itemDefinition.size,
-    });
-    return true;
-  }
-}
-
-/**
- * プレイヤーのカバン内のユニークなアイテム種類の数を返す
- * @returns {number}
- */
-function getUniqueItemTypesCountInBag() {
-  return bagInventory.length; // bagInventoryは既にユニークなアイテム種類のみを保持する設計
-}
 
 /**
  * 天候をランダムに設定し、表示を更新する関数
@@ -370,57 +176,194 @@ function displayMessage(message) {
   const messageElement = document.createElement("p");
   const timestamp = new Date().toLocaleTimeString(); // 時刻を追加
   messageElement.textContent = `[${timestamp}] ${message}`;
+  // 新しいメッセージをログの末尾に追加
   messageLog.appendChild(messageElement);
   // スクロールを一番下にする
   messageLog.scrollTop = messageLog.scrollHeight;
 }
 
 /**
- * インベントリの表示/非表示を切り替える共通関数
+ * モーダルの表示/非表示を切り替える共通関数
+ * @param {string|null} modalType - 表示するモーダルの種類 ('inventory', 'info')。nullの場合は全てのモーダルを閉じる。
+ * @param {Object|null} [moduleInfo=null] - infoモーダル表示時に渡すモジュール情報
  */
-function toggleInventory() {
-  const isVisible = modalContentWrapper.classList.toggle("is-open"); // 'is-open'クラスをトグル
-
-  if (isVisible) {
-    modalOverlay.style.display = "block";
-    // インベントリグリッドのセルを初回のみ作成
-    if (inventoryGrid.children.length === 0) {
-      createInventoryCells();
-    }
-    // カバンと船体コンテナの表示を更新
-    updateBagDisplay(); // カバンの中身を表示
-    updateShipContainerDisplay(); // 船体コンテナの中身を表示
-  } else {
+function toggleModal(modalType, moduleInfo = null) {
+  // まず、全てのモーダルを閉じるための準備をする
+  // InventoryManagerにインベントリを閉じるよう指示
+  if (InventoryManager.isInventoryOpen()) {
+    // InventoryManagerに状態を問い合わせる
+    InventoryManager.toggleInventoryModal(false); // 強制的に閉じる
+  }
+  // 情報モーダルを閉じる
+  if (
+    infoModalContentWrapper &&
+    infoModalContentWrapper.classList.contains("is-open")
+  ) {
+    infoModalContentWrapper.classList.remove("is-open");
+  }
+  // オーバーレイを一旦閉じる (後で開く必要がある場合のみ開く)
+  if (modalOverlay) {
     modalOverlay.style.display = "none";
   }
+
+  if (modalType === "inventory") {
+    // インベントリモーダルを開く
+    InventoryManager.toggleInventoryModal(true); // InventoryManagerに開くよう指示
+    if (InventoryManager.isInventoryOpen()) {
+      // 開いたか確認
+      if (modalOverlay) modalOverlay.style.display = "block";
+    }
+  } else if (modalType === "info" && moduleInfo) {
+    // 情報モーダルを開く
+    if (modalOverlay) modalOverlay.style.display = "block";
+    if (infoModalContentWrapper)
+      infoModalContentWrapper.classList.add("is-open");
+
+    // 街の説明文を設定
+    if (infoModalTitle) infoModalTitle.textContent = moduleInfo.getTitle();
+    if (infoModalText) infoModalText.textContent = moduleInfo.getInfo();
+
+    // 価格情報を設定 (getPricesInfo関数が存在する場合のみ)
+    if (infoModalPrices && typeof moduleInfo.getPricesInfo === "function") {
+      infoModalPrices.textContent = moduleInfo.getPricesInfo();
+      infoModalPrices.style.display = "block"; // 表示を有効にする
+    } else if (infoModalPrices) {
+      infoModalPrices.style.display = "none"; // 価格情報がない場合は非表示にする
+    }
+  }
+  // modalType === null の場合は、既に上で全てのモーダルを閉じる処理が行われているため、追加の処理は不要
 }
 
-// キーが押された時のイベントリスナーを設定
-document.addEventListener("keydown", (event) => {
-  // 'e'キーが押されたかチェック
-  if (event.key === "e") {
-    event.preventDefault(); // ブラウザのデフォルトの動作を無効にする
-    toggleInventory(); // インベントリの表示/非表示を切り替える
-  }
-});
+// ページロード時に初期設定を行う
+window.onload = () => {
+  // DOM要素への参照をここで取得 (constを削除して、グローバル変数に代入する)
+  inventoryContainer = document.getElementById("inventoryContainer");
+  inventoryGrid = document.getElementById("inventoryGrid");
+  availableItemsList = document.getElementById("availableItemsList");
+  itemListTitle = document.querySelector("#itemListArea .item-list-title");
+  inventoryModalContentWrapper = document.getElementById(
+    "inventoryModalContentWrapper"
+  );
 
-// バッグアイコンがクリックされた時のイベントを追加
-bagIcon.addEventListener("click", () => {
-  toggleInventory(); // インベントリの表示/非表示を切り替える
-});
+  modalOverlay = document.getElementById("modalOverlay");
+  infoModalContentWrapper = document.getElementById("infoModalContentWrapper");
+  infoModalTitle = document.getElementById("infoModalTitle");
+  infoModalText = document.getElementById("infoModalText");
+  infoModalPrices = document.getElementById("infoModalPrices"); // 新しく取得
+  gameTimeDisplay = document.getElementById("gameTimeDisplay");
+  weatherDisplay = document.getElementById("weatherDisplay");
+  weatherIconContainer = document.querySelector(".weather-icon-container");
+  weatherIcons = {
+    sunny: document.getElementById("icon-sunny"),
+    cloudy: document.getElementById("icon-cloudy"),
+    rainy: document.getElementById("icon-rainy"),
+    stormy: document.getElementById("icon-stormy"),
+    snowy: document.getElementById("icon-snowy"),
+  };
+  healthValueDisplay = document.getElementById("healthValue");
+  healthBar = document.getElementById("healthBar");
+  fuelValueDisplay = document.getElementById("fuelValue");
+  fuelBar = document.getElementById("fuelBar");
+  moneyDisplay = document.getElementById("moneyDisplay");
+  messageLog = document.getElementById("messageLog");
+  bagIcon = document.getElementById("bagIcon");
+  shipStateDisplay = document.getElementById("shipStateDisplay");
+  mainContentText = document.getElementById("mainContentText");
+  choicesContainer = document.getElementById("choicesContainer");
+  mainContentTitle = document.getElementById("mainContentTitle");
 
-// モーダルオーバーレイがクリックされた時のイベントを追加
-modalOverlay.addEventListener("click", () => {
-  modalContentWrapper.classList.remove("is-open"); // モーダルコンテンツラッパーを非表示にする
-  modalOverlay.style.display = "none"; // モーダルオーバーレイを非表示にする
-});
+  // InventoryManagerを初期化し、必要なDOM要素とコールバックを渡す
+  // 引数に初期で使えるカバンのスロット数と、表示するグリッドの総行数・列数を追加したわ！
+  InventoryManager.initInventory(
+    {
+      inventoryGrid,
+      availableItemsList,
+      itemListTitle,
+      inventoryModalContentWrapper,
+    },
+    displayMessage,
+    16,
+    7,
+    7
+  ); // 4x4=16スロットが初期で使える、表示は7x7グリッド
+
+  // ゲーム開始メッセージを最初に表示
+  displayMessage("ゲームが開始されました！");
+
+  // weatherIconsの初期化後にsetRandomWeatherを呼び出す
+  setRandomWeather(); // 天候を設定
+
+  updateHealthDisplay(); // 体力表示を更新
+  updateFuelDisplay(); // 燃料表示を更新
+  updateMoneyDisplay(); // お金表示を更新
+  updateGameTimeDisplay(); // 新しく追加: ゲーム時間表示を更新
+
+  // 初回起動時の「小さな街」の価格を固定で設定する
+  // calculatePricesForVisitに1.0を渡すことで、ランダムではなくベース価格が設定される
+  SmallTown.calculatePricesForVisit(1.0);
+
+  updateShipStateDisplay(); // 船の状態表示を更新（メインコンテンツも更新される）
+  console.log("ゲームがロードされました！");
+
+  // キーが押された時のイベントリスナーを設定
+  document.addEventListener("keydown", (event) => {
+    const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen(); // InventoryManagerから状態を取得
+    const isInfoModalCurrentlyOpen =
+      infoModalContentWrapper.classList.contains("is-open");
+
+    if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+      // 何らかのモーダルが開いている場合
+      if (event.key === "e") {
+        if (isInventoryCurrentlyOpen) {
+          // インベントリが開いている場合はEで閉じる
+          event.preventDefault();
+          toggleModal(null); // 全てのモーダルを閉じる
+        } else if (isInfoModalCurrentlyOpen) {
+          // 情報モーダルが開いている場合はEを押しても何もしない（ショートカット無効）
+          event.preventDefault();
+        }
+      } else {
+        // E以外のキーが押された場合は、全てのショートカットを無効にする
+        event.preventDefault();
+      }
+    } else {
+      // モーダルが何も開いていない場合
+      if (event.key === "e") {
+        event.preventDefault();
+        toggleModal("inventory"); // インベントリを開く
+      }
+      // 他のキーは通常通り動作させる（event.preventDefault()を呼ばない）
+    }
+  });
+
+  // バッグアイコンがクリックされた時のイベントを追加
+  bagIcon.addEventListener("click", () => {
+    toggleModal("inventory"); // インベントリの表示/非表示を切り替える
+  });
+
+  // モーダルオーバーレイがクリックされた時のイベントを追加
+  modalOverlay.addEventListener("click", (event) => {
+    // モーダルコンテンツ自体がクリックされた場合は閉じないようにする
+    // InventoryManager.isInventoryOpen() を使って、現在インベントリが開いているか確認
+    const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
+    const isInfoModalCurrentlyOpen =
+      infoModalContentWrapper.classList.contains("is-open");
+
+    if (event.target === modalOverlay) {
+      // インベントリまたは情報モーダルが開いている場合のみ閉じる
+      if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+        toggleModal(null); // 全てのモーダルを閉じる
+      }
+    }
+  });
+};
 
 /**
  * 無人島での探索を開始する関数
  * @param {number} durationMinutes - 探索にかかるゲーム分数
  */
 function startIslandExploration(durationMinutes) {
-  displayMessage("無人島を探索しています...");
+  displayMessage(`無人島を探索しています... (${durationMinutes}分)`); // メッセージに時間を追加したわ！
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -445,15 +388,19 @@ function startIslandExploration(durationMinutes) {
         displayMessage(`${foundMoney}バルク見つけました！`);
       } else if (rand < 0.4) {
         // 10%の確率でアイテムを見つける (0.3 - 0.4)
-        const itemsToFind = allItemDefinitions.filter(
-          (item) => item.name !== "燃料タンク" && item.name !== "修理キット"
-        );
+        const itemsToFind =
+          InventoryManager.inventoryData.allItemDefinitions.filter(
+            (item) => item.name !== "燃料タンク" && item.name !== "修理キット"
+          );
         if (itemsToFind.length > 0) {
           const foundItemDef =
             itemsToFind[Math.floor(Math.random() * itemsToFind.length)];
           const quantityFound = Math.floor(Math.random() * 2) + 1; // 1から2個見つける
 
-          const addedSuccessfully = addItemToBag(foundItemDef, quantityFound);
+          const addedSuccessfully = InventoryManager.addItemToBag(
+            foundItemDef,
+            quantityFound
+          );
           if (addedSuccessfully) {
             displayMessage(
               `${foundItemDef.name}を${quantityFound}個見つけました！`
@@ -468,7 +415,7 @@ function startIslandExploration(durationMinutes) {
         }
       } else {
         // 残りの60%は何もなし (0.4 - 1.0)
-        displayMessage("何も見つかりませんでした...");
+        displayMessage("特に何もありませんでした。"); // メッセージを修正
       }
 
       gameContext.enableAllButtons(); // ボタンを有効に戻す
@@ -494,7 +441,9 @@ function startAirshipExploration(
     return;
   }
 
-  displayMessage("飛行船での探索を開始しました。");
+  displayMessage(
+    `飛行船での探索を開始しました。(${durationMinutes}分間の航行)`
+  ); // メッセージに時間を追加したわ！
   currentFuel -= initialFuelCost; // 初期燃料を消費
   updateFuelDisplay();
 
@@ -544,7 +493,9 @@ function startAirshipExploration(
  * @param {number} durationMinutes - 散策にかかるゲーム分数
  */
 function startStrollExploration(durationMinutes) {
-  displayMessage("街を散策しています。何か新しい発見があるかもしれません...");
+  displayMessage(
+    `街を散策しています。何か新しい発見があるかもしれません... (${durationMinutes}分)`
+  ); // メッセージに時間を追加したわ！
 
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
@@ -629,17 +580,41 @@ const gameContext = {
   },
   set currentLocation(value) {
     currentLocation = value;
-    updateMainContent();
-  }, // 場所が変わったらメインコンテンツを更新
+    updateMainContent(); // 場所が変わったらメインコンテンツを更新
+
+    // 新しい場所が街または島の場合、船の状態を「離船中」に設定
+    if (
+      currentLocation === "小さな街" ||
+      currentLocation === "大きな街" ||
+      currentLocation === "無人島"
+    ) {
+      gameContext.shipState = "離船中"; // ここで船の状態を「離船中」に設定
+    }
+
+    // 街のモジュールにcalculatePricesForVisit関数があれば呼び出す
+    let currentModule;
+    if (currentLocation === "小さな街") {
+      currentModule = SmallTown;
+    } else if (currentLocation === "大きな街") {
+      currentModule = LargeTown;
+    }
+
+    if (
+      currentModule &&
+      typeof currentModule.calculatePricesForVisit === "function"
+    ) {
+      currentModule.calculatePricesForVisit(); // 引数なしで呼び出し、ランダムな倍率を適用
+    }
+  },
   get bagInventory() {
-    return bagInventory;
-  }, // bagInventoryを公開
+    return InventoryManager.inventoryData.bagInventory;
+  },
   get shipContainerInventory() {
-    return shipContainerInventory;
-  }, // shipContainerInventoryを公開
+    return InventoryManager.inventoryData.shipContainerInventory;
+  },
   get maxItemTypesInBag() {
-    return maxItemTypesInBag;
-  }, // maxItemTypesInBagを公開
+    return InventoryManager.inventoryData.maxItemTypesInBag;
+  },
 
   // 関数
   displayMessage: displayMessage,
@@ -661,8 +636,14 @@ const gameContext = {
     const allButtons = choicesContainer.querySelectorAll("button");
     allButtons.forEach((button) => (button.disabled = false));
   },
-  addItemToBag: addItemToBag, // ロケーションからカバンにアイテムを追加できるように公開
-  getUniqueItemTypesCountInBag: getUniqueItemTypesCountInBag, // カバンの所持アイテム種類数を公開
+  // InventoryManagerからアイテム追加関数を公開
+  addItemToBag: InventoryManager.addItemToBag,
+  addItemToShipContainer: InventoryManager.addItemToShipContainer,
+  getUniqueItemTypesCountInBag: InventoryManager.getUniqueItemTypesCountInBag,
+  // 新しく追加: 場所の情報を表示する関数 (モーダル表示に切り替え)
+  displayLocationInfo: (module) => {
+    toggleModal("info", module);
+  },
 };
 
 /**
@@ -673,8 +654,8 @@ function updateMainContent() {
 
   // 現在の場所に基づいて適切なロケーションモジュールを選択
   let currentModule;
-  if (shipState === "操縦中" || shipState === "停泊中") {
-    // 操縦中または停泊中の場合は飛行船のモジュール
+  if (currentLocation === "飛行船") {
+    // 現在地が「飛行船」の場合
     currentModule = Airship;
   } else if (currentLocation === "大きな街") {
     currentModule = LargeTown;
@@ -691,19 +672,50 @@ function updateMainContent() {
   }
 
   // ロケーションモジュールから情報を取得して表示を更新
-  mainContentTitle.textContent = currentModule.getTitle();
+  mainContentTitle.innerHTML = ""; // タイトル要素をクリア
+  const titleTextSpan = document.createElement("span");
+  titleTextSpan.textContent = currentModule.getTitle();
+  mainContentTitle.appendChild(titleTextSpan);
+
+  // 「i」ボタンを作成して追加
+  const infoButton = document.createElement("button");
+  infoButton.classList.add("info-button");
+  infoButton.innerHTML = `
+        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+    `;
+  infoButton.addEventListener("click", () => {
+    gameContext.displayLocationInfo(currentModule); // 街の情報を表示
+  });
+  // 飛行船の場所では情報ボタンを表示しない
+  if (currentLocation !== "飛行船") {
+    mainContentTitle.appendChild(infoButton);
+  }
+
   mainContentText.innerHTML = currentModule.getMessage();
 
   // 行動セクションを動的に生成
   const actions = currentModule.getActions();
   actions.forEach((section) => {
-    const sectionTitle = document.createElement("h4");
-    sectionTitle.textContent = section.subtitle;
-    sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
-    const buttonsWrapper = document.createElement("div");
-    buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
+    // サブタイトルがnullでない場合のみh4要素を作成
+    if (section.subtitle !== null) {
+      const sectionTitle = document.createElement("h4");
+      sectionTitle.textContent = section.subtitle;
+      sectionTitle.classList.add("action-section-title"); // クラスは既存のものを流用
+      choicesContainer.appendChild(sectionTitle);
+    }
 
-    choicesContainer.appendChild(sectionTitle);
+    const buttonsWrapper = document.createElement("div");
+    // サブタイトルがnullの場合は、特殊なクラスを追加してスタイル調整できるようにする
+    if (section.subtitle === null) {
+      buttonsWrapper.classList.add("no-subtitle-buttons-wrapper");
+    } else {
+      buttonsWrapper.classList.add("action-buttons-wrapper"); // クラスは既存のものを流用
+    }
+
     choicesContainer.appendChild(buttonsWrapper);
 
     section.buttons.forEach((buttonInfo) => {
@@ -742,24 +754,3 @@ function createChoiceButton(
   button.disabled = disabled; // disabled属性を設定
   container.appendChild(button); // 指定されたコンテナに追加
 }
-
-// ページロード時に初期設定を行う
-window.onload = () => {
-  // ゲーム開始メッセージを最初に表示
-  displayMessage("ゲームが開始されました！"); // ここに移動
-
-  // currentLocationはgame.jsで初期値が設定されているためここでは変更しない
-
-  setRandomWeather(); // 天候を設定
-  updateHealthDisplay(); // 体力表示を更新
-  updateFuelDisplay(); // 燃料表示を更新
-  updateMoneyDisplay(); // お金表示を更新
-  updateGameTimeDisplay(); // 新しく追加: ゲーム時間表示を更新
-  updateShipStateDisplay(); // 船の状態表示を更新（メインコンテンツも更新される）
-  console.log("ゲームがロードされました！");
-
-  // インベントリとアイテムリストの初期生成と表示
-  createInventoryCells(); // グリッドのセルを作成
-  updateBagDisplay(); // カバンの中身を初期表示
-  updateShipContainerDisplay(); // 船体コンテナの中身を初期表示 (空)
-};

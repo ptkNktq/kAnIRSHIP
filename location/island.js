@@ -56,7 +56,7 @@ export function executeAction(actionName, gameContext) {
     case "depart":
       gameContext.shipState = "停泊中"; // 飛行船に戻ったら停泊中に変更
       gameContext.currentLocation = "飛行船"; // 現在地を飛行船に変更
-      gameContext.displayMessage("飛行船に戻りました！"); // メッセージを変更
+      gameContext.displayMessage("飛行船に戻りました！(10分経過)"); // メッセージに時間を追加したわ！
       gameContext.advanceGameTime(10); // 10分進める (出発にかかる時間)
       gameContext.updateMainContent(); // 出発後にメインコンテンツを更新
       break;

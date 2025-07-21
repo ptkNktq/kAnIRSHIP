@@ -1,0 +1,242 @@
+/* location/location.css */
+
+/* メインコンテンツエリアのスタイル */
+.main-content-area {
+  grid-column: 2; /* 2列目に配置 */
+  grid-row: 1; /* 1行目のみを占めるように変更 */
+  background-color: rgba(255, 255, 255, 0.7); /* 半透明の白 */
+  border: 3px solid #404040;
+  border-radius: 10px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  box-sizing: border-box; /* パディングとボーダーを幅に含める */
+  overflow-y: auto; /* コンテンツが溢れたらスクロール */
+  z-index: 4; /* 他のUI要素より少し奥に */
+  color: #333; /* 文字色を濃い灰色に */
+  display: flex; /* Flexboxを使って縦に並べる */
+  flex-direction: column;
+  height: calc(
+    100vh - 40px
+  ); /* ウィンドウの高さから上下のパディングを引いた値に制限 */
+}
+
+.main-content-title {
+  color: #00796b; /* アクセントカラー */
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  border-bottom: 2px solid #00796b;
+  padding-bottom: 5px;
+  display: flex; /* Flexboxを使ってタイトルとボタンを横並びにする */
+  align-items: center; /* 垂直方向の中央揃え */
+  justify-content: center; /* 水平方向の中央揃え */
+  gap: 10px; /* タイトルとボタンの間の隙間 */
+}
+
+/* 情報ボタンのスタイル */
+.info-button {
+  background: none; /* 背景なし */
+  border: none; /* ボーダーなし */
+  padding: 0; /* パディングなし */
+  cursor: pointer; /* カーソルをポインターに */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; /* ボタンの幅を少し大きく */
+  height: 28px; /* ボタンの高さを少し大きく */
+  border-radius: 50%; /* 丸い形 */
+  transition: background-color 0.2s ease;
+  flex-shrink: 0; /* 縮小しない */
+  color: #00796b; /* アイコンの色をボタンのテキスト色に合わせる */
+  font-weight: bold; /* テキストを太字に */
+  font-size: 1.2em; /* アイコンのサイズを調整 */
+  line-height: 1; /* 行の高さを調整して中央に配置 */
+  text-align: center; /* テキストを中央に配置 */
+  background-color: rgba(0, 121, 107, 0.1); /* 薄い背景色 */
+}
+
+.info-button:hover {
+  background-color: rgba(0, 121, 107, 0.2); /* ホバー時の背景色 */
+}
+
+.info-button:active {
+  background-color: rgba(0, 121, 107, 0.3); /* クリック時の背景色 */
+  transform: translateY(1px); /* 少し押し込む */
+}
+
+.info-icon {
+  width: 22px; /* アイコンの幅を調整 */
+  height: 22px; /* アイコンの高さを調整 */
+  stroke: currentColor; /* 親要素のcolorを継承 */
+  stroke-width: 2;
+}
+
+.main-content-area p {
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+/* 選択肢コンテナのスタイル */
+.choices-container {
+  display: flex;
+  flex-direction: column; /* ボタンを縦に並べる */
+  gap: 10px; /* ボタン間の隙間 */
+  margin-top: 20px;
+  align-items: center; /* 水平方向の中央揃え */
+}
+
+/* 各セクションのタイトルスタイル */
+.action-section-title,
+.ship-section-title {
+  color: #00796b; /* アクセントカラー */
+  text-align: center;
+  margin-top: 15px; /* サブタイトル上部のマージンを少し狭く */
+  margin-bottom: 5px; /* サブタイトル下部のマージンを狭く */
+  font-size: 1.3em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* 区切り線 */
+  padding-bottom: 5px;
+  width: 80%; /* choices-containerのボタンと幅を合わせる */
+  max-width: 300px; /* choices-containerのボタンと最大幅を合わせる */
+}
+
+/* 各ボタンラッパーの基本スタイル */
+.action-buttons-wrapper,
+.ship-buttons-wrapper {
+  display: flex;
+  flex-direction: column; /* ボタンを縦に並べる */
+  gap: 10px; /* ボタン間の隙間 */
+  margin-top: 5px; /* ラッパー上部のマージンを狭く */
+  width: 80%; /* choices-containerのボタンと幅を合わせる */
+  max-width: 300px; /* choices-containerのボタンと最大幅を合わせる */
+  align-items: center; /* 中央揃え */
+}
+
+/* 出航系ボタンラッパーとサブタイトルなしのボタンラッパーの横線スタイル */
+.departure-buttons-wrapper,
+.no-subtitle-buttons-wrapper {
+  padding-top: 15px; /* 上部に余白 */
+  border-top: 1px solid rgba(0, 0, 0, 0.1); /* 上部に区切り線 */
+  /* 基本スタイルを継承するために、上記の.action-buttons-wrapperと同じプロパティを再定義 */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+  width: 80%;
+  max-width: 300px;
+  align-items: center;
+}
+
+/* 選択肢ボタンの基本スタイル */
+.choice-button {
+  padding: 10px 20px;
+  font-size: 1.1em;
+  cursor: pointer;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
+  outline: none;
+  width: 100%; /* 親コンテナの幅いっぱいに広がる */
+  text-align: center;
+}
+
+/* デフォルトの選択肢ボタンの色 (物資補給、船修理など) */
+.choice-button-default {
+  background-color: #00796b; /* アクセントカラー */
+  box-shadow: 0 4px #004d40; /* 立体的な影 */
+}
+
+.choice-button-default:hover {
+  background-color: #004d40; /* ホバー時の色 */
+}
+
+.choice-button-default:active {
+  background-color: #00332b; /* クリック時の色 */
+  transform: translateY(2px); /* 少し下に移動 */
+  box-shadow: 0 2px #004d40; /* 影を小さくする */
+}
+
+/* 航海に出る/停泊するボタンの色 (強調) */
+.choice-button-primary {
+  background-color: #3498db; /* 青色 */
+  box-shadow: 0 4px #2980b9; /* 立体的な影 */
+}
+
+.choice-button-primary:hover {
+  background-color: #2980b9; /* ホバー時の色 */
+}
+
+.choice-button-primary:active {
+  background-color: #2471a3; /* クリック時の色 */
+  transform: translateY(2px); /* 少し下に移動 */
+  box-shadow: 0 2px #2980b9; /* 影を小さくする */
+}
+
+/* 無効化されたボタンのスタイル */
+.choice-button:disabled {
+  background-color: #cccccc; /* グレーアウト */
+  box-shadow: 0 2px #999999; /* 影を薄く */
+  cursor: not-allowed; /* カーソルを禁止マークに */
+  transform: translateY(0); /* 押し込み効果を無効に */
+}
+
+.choice-button:disabled:hover {
+  background-color: #cccccc; /* ホバー時もグレーアウトのまま */
+  transform: translateY(0);
+  box-shadow: 0 2px #999999;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .main-content-area {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto; /* Gridが幅を管理 */
+    height: calc(100vh - 30px); /* レスポンシブでは自動調整 */
+  }
+  .main-content-title {
+    font-size: 1.3em;
+  }
+  .choice-button {
+    padding: 8px 15px;
+    font-size: 1em;
+    width: 100%; /* 親コンテナの幅いっぱいに広がる */
+  }
+  .action-section-title,
+  .ship-section-title,
+  .action-buttons-wrapper,
+  .ship-buttons-wrapper,
+  .departure-buttons-wrapper,
+  .no-subtitle-buttons-wrapper {
+    width: 90%; /* モバイルでは幅を広げる */
+    max-width: 280px; /* 最大幅を調整 */
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content-area {
+    grid-column: 1; /* 1列目に配置 */
+    width: 90%; /* 画面幅の90% */
+    max-width: 300px; /* 最大幅を設定 */
+    margin: 0 auto; /* 中央寄せ */
+    height: auto; /* 高さを自動調整 */
+    grid-row: 2; /* メインコンテンツは2行目 */
+  }
+  .main-content-title {
+    font-size: 1.3em;
+  }
+  .choice-button {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+  .action-section-title,
+  .ship-section-title,
+  .action-buttons-wrapper,
+  .ship-buttons-wrapper,
+  .departure-buttons-wrapper,
+  .no-subtitle-buttons-wrapper {
+    width: 95%; /* モバイルでは幅を広げる */
+    max-width: 280px; /* 最大幅を調整 */
+  }
+}
