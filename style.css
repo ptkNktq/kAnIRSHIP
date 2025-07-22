@@ -10,7 +10,7 @@ body {
   min-height: 100vh;
   margin: 0;
   background-color: #d2b48c; /* 明るい茶色 */
-  font-family: "Inter", sans-serif;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
   color: #00796b;
   overflow: hidden; /* スクロールバーが出ないようにする */
 }
@@ -51,6 +51,7 @@ body {
   max-height: 95vh; /* 画面高さの95%まで */
   box-sizing: border-box;
   padding: 10px; /* ラッパー自体のパディング */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* 情報モーダルに特化したスタイル */
@@ -79,6 +80,7 @@ body {
   margin-bottom: 15px;
   border-bottom: 1px solid #505050;
   padding-bottom: 5px;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .info-modal-text {
@@ -86,6 +88,7 @@ body {
   line-height: 1.6;
   margin-bottom: 15px; /* 価格情報との間にマージンを追加 */
   text-align: left; /* ここを左揃えに設定 */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* 新しく追加：情報モーダル内の価格表示のスタイル */
@@ -99,6 +102,7 @@ body {
   border-radius: 5px;
   margin-top: 10px; /* 説明文との間に少しスペース */
   white-space: pre-wrap; /* 改行を有効にする */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* インベントリコンテナのスタイル */
@@ -114,6 +118,7 @@ body {
   flex-shrink: 0; /* 縮小しない */
   display: flex; /* タイトルとグリッドを縦に並べるため */
   flex-direction: column; /* 縦並び */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* 船体コンテナのタイトルスタイル */
@@ -130,6 +135,7 @@ body {
   display: flex; /* タイトルと(E)を横並びにするため */
   justify-content: center; /* 中央寄せ */
   align-items: baseline; /* ベースラインを揃える */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* インベントリグリッドのスタイル */
@@ -160,6 +166,7 @@ body {
   position: relative; /* アイテム画像とテキストの配置のため */
   overflow: hidden; /* はみ出たコンテンツを隠す */
   box-sizing: border-box; /* パディングとボーダーを幅に含める */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* アイテムが置かれているセルのスタイル */
@@ -185,6 +192,7 @@ body {
   white-space: nowrap; /* テキストが改行されないように */
   overflow: hidden;
   text-overflow: ellipsis; /* はみ出たテキストを...で表示 */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .inventory-cell .item-image {
@@ -208,6 +216,7 @@ body {
   background-color: rgba(0, 0, 0, 0.5); /* 半透明の黒背景 */
   padding: 2px 4px; /* パディングを調整 */
   border-radius: 3px;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* 使えないスロットのスタイル */
@@ -333,6 +342,7 @@ body {
   box-sizing: border-box; /* パディングとボーダーを幅に含める */
   flex-shrink: 0; /* 親のFlexboxコンテナ内で縮小しないように明示 */
   flex-grow: 0; /* 親のFlexboxコンテナ内で拡大しないように明示 */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .game-info-item {
@@ -343,12 +353,14 @@ body {
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .game-info-label {
   font-weight: bold;
   color: #f39c12;
   margin-right: 5px;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .durability-bar-container,
@@ -402,6 +414,7 @@ body {
   font-size: 0.9em;
   text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
   white-space: nowrap; /* テキストが改行されないようにする */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .weather-icon-container {
@@ -434,6 +447,7 @@ body {
   flex-shrink: 0; /* 縮小しない */
   display: flex; /* Flexboxで子要素を縦に並べる */
   flex-direction: column; /* 縦並び */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* アイテムリストのタイトルスタイル */
@@ -449,6 +463,7 @@ body {
   display: flex; /* タイトルと(E)を横並びにするため */
   justify-content: center; /* 中央寄せ */
   align-items: baseline; /* ベースラインを揃える */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .inventory-open-key {
@@ -456,6 +471,7 @@ body {
   margin-left: 5px; /* タイトルとの間に少しスペース */
   color: #99ccff; /* 少し明るい色に */
   font-weight: normal; /* 太字にしない */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .available-items-list {
@@ -478,6 +494,7 @@ body {
   display: flex;
   justify-content: space-between; /* アイテム名と数量を左右に配置 */
   align-items: center;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .available-items-list li:hover {
@@ -487,6 +504,7 @@ body {
 .item-quantity {
   color: #99ccff;
   font-weight: bold;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* メッセージ表示エリアのスタイル */
@@ -504,6 +522,7 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   height: calc(100vh - 40px); /* ログエリアの高さを画面いっぱいに戻す */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .message-area-title {
@@ -515,6 +534,7 @@ body {
   border-bottom: 1px solid #505050;
   padding-bottom: 5px;
   flex-shrink: 0; /* Prevent title from shrinking */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .message-log {
@@ -523,12 +543,14 @@ body {
   padding-right: 10px;
   font-size: 0.9em;
   line-height: 1.4;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .message-log p {
   margin: 0 0 5px 0;
   padding: 3px 0;
   border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .message-log p:last-child {
@@ -553,6 +575,7 @@ body {
   height: calc(
     100vh - 40px
   ); /* ウィンドウの高さから上下のパディングを引いた値に制限 */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .main-content-title {
@@ -567,6 +590,7 @@ body {
   align-items: center; /* 垂直方向の中央揃え */
   justify-content: center; /* 水平方向の中央揃え */
   gap: 10px; /* タイトルとボタンの間の隙間 */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* 情報ボタンのスタイル */
@@ -590,6 +614,7 @@ body {
   text-align: center; /* テキストを中央に配置 */
   /* box-shadow: 0 2px 4px rgba(0,0,0,0.2); */ /* ここをコメントアウトして影を削除 */
   background-color: rgba(0, 121, 107, 0.1); /* 薄い背景色 */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 .info-button:hover {
@@ -613,6 +638,7 @@ body {
 .main-content-area p {
   margin-bottom: 10px;
   line-height: 1.6;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* 選択肢コンテナのスタイル */
@@ -636,6 +662,7 @@ body {
   padding-bottom: 5px;
   width: 80%; /* choices-containerのボタンと幅を合わせる */
   max-width: 300px; /* choices-containerのボタンと最大幅を合わせる */
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* 各ボタンラッパーの基本スタイル */
@@ -678,6 +705,7 @@ body {
   outline: none;
   width: 100%; /* 親コンテナの幅いっぱいに広がる */
   text-align: center;
+  font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
 }
 
 /* デフォルトの選択肢ボタンの色 (物資補給、船修理など) */
@@ -826,10 +854,10 @@ body {
     border-radius: 12px;
   }
   /* 飛行船コンテナのレスポンシブ調整 */
-  /* .airship-container { */
-  /* width: 150px; */
-  /* height: 112.5px; */
-  /* } */
+  /* .airship-container {
+    width: 150px;
+    height: 112.5px;
+  } */
   /* ドット絵風バッグアイコンのコンテナのレスポンシブ調整 */
   .bag-icon-container {
     width: 40px;
