@@ -26,6 +26,7 @@ let infoModalContentWrapper;
 let infoModalTitle;
 let infoModalText;
 let infoModalPrices; // 新しく追加：価格表示用の要素
+let configModalContentWrapper; // 新しく追加：設定モーダルの要素
 let gameTimeDisplay;
 let weatherDisplay;
 let weatherIconContainer;
@@ -40,28 +41,71 @@ let bagIcon;
 let mainContentText;
 let choicesContainer;
 let mainContentTitle;
+let configButton; // 新しく追加：設定ボタンの要素
+let resetGameButton; // 新しく追加：ゲームリセットボタンの要素
 
-// ゲームの状態変数 (初期値はinitializeGameで設定されるため、ここでは宣言のみ)
-let maxDurability; // 体力から耐久に変更
-let currentDurability; // 体力から耐久に変更
-let maxFuel;
-let currentFuel;
-let currentMoney;
-let shipState;
-let currentLocation;
-let previousLocation;
+// ゲームの状態変数
+let gameState = {
+  maxDurability: 20, // 体力から耐久に変更
+  currentDurability: 20, // 体力から耐久に変更
+  maxFuel: 100,
+  currentFuel: 100,
+  currentMoney: 100000,
+  shipState: "離船中",
+  currentLocation: "小さな街",
+  previousLocation: "飛行船",
+  gameHour: 8,
+  gameMinute: 0,
+  gameDay: 1,
+  bagInventory: [], // InventoryManagerから取得する
+  shipContainerInventory: [], // InventoryManagerから取得する
+};
 
-// ゲーム内時間変数
-let gameHour;
-let gameMinute;
-let gameDay;
+/**
+ * ゲームデータをLocalStorageに保存する関数
+ */
+function saveGameData() {
+  // InventoryManagerから最新のインベントリデータを取得してgameStateに反映
+  gameState.bagInventory = InventoryManager.getBagInventory();
+  gameState.shipContainerInventory =
+    InventoryManager.getShipContainerInventory();
+
+  try {
+    const dataToSave = JSON.stringify(gameState);
+    localStorage.setItem("airshipAdventureSaveData", dataToSave);
+    displayMessage("ゲームデータを保存しました！");
+  } catch (e) {
+    console.error("データの保存に失敗しました:", e);
+    displayMessage("データの保存に失敗しました。");
+  }
+}
+
+/**
+ * ゲームデータをLocalStorageからロードする関数
+ * @returns {Object|null} ロードしたゲームデータ、またはnull
+ */
+function loadGameData() {
+  try {
+    const savedData = localStorage.getItem("airshipAdventureSaveData");
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      displayMessage("ゲームデータをロードしました！");
+      return parsedData;
+    }
+  } catch (e) {
+    console.error("データのロードに失敗しました:", e);
+    displayMessage("データのロードに失敗しました。");
+  }
+  return null;
+}
 
 /**
  * 耐久表示を更新する関数
  */
 function updateDurabilityDisplay() {
-  durabilityValueDisplay.textContent = `${currentDurability} / ${maxDurability}`; // 数値表示を追加
-  const durabilityPercentage = (currentDurability / maxDurability) * 100;
+  durabilityValueDisplay.textContent = `${gameState.currentDurability} / ${gameState.maxDurability}`; // 数値表示を追加
+  const durabilityPercentage =
+    (gameState.currentDurability / gameState.maxDurability) * 100;
   durabilityBar.style.width = `${durabilityPercentage}%`;
 
   // 耐久バーの色を変化させる
@@ -78,8 +122,8 @@ function updateDurabilityDisplay() {
  * 燃料表示を更新する関数
  */
 function updateFuelDisplay() {
-  fuelValueDisplay.textContent = `${currentFuel} / ${maxFuel}`; // 数値表示を追加
-  const fuelPercentage = (currentFuel / maxFuel) * 100;
+  fuelValueDisplay.textContent = `${gameState.currentFuel} / ${gameState.maxFuel}`; // 数値表示を追加
+  const fuelPercentage = (gameState.currentFuel / gameState.maxFuel) * 100;
   fuelBar.style.width = `${fuelPercentage}%`;
 
   // 燃料バーの色を変化させる (例: 青から赤へ)
@@ -97,7 +141,7 @@ function updateFuelDisplay() {
  */
 function updateMoneyDisplay() {
   // toLocaleString() を使用して3桁区切りにフォーマット
-  moneyDisplay.textContent = `${currentMoney.toLocaleString()} バルク`;
+  moneyDisplay.textContent = `${gameState.currentMoney.toLocaleString()} バルク`;
 }
 
 /**
@@ -106,9 +150,9 @@ function updateMoneyDisplay() {
 function updateGameTimeDisplay() {
   // 時間を2桁表示にするためのヘルパー関数
   const formatTime = (num) => String(num).padStart(2, "0");
-  gameTimeDisplay.textContent = `Day ${gameDay} ${formatTime(
-    gameHour
-  )}:${formatTime(gameMinute)}`;
+  gameTimeDisplay.textContent = `Day ${gameState.gameDay} ${formatTime(
+    gameState.gameHour
+  )}:${formatTime(gameState.gameMinute)}`;
 }
 
 /**
@@ -116,15 +160,15 @@ function updateGameTimeDisplay() {
  * @param {number} minutes - 進める分数 (デフォルトは1分)
  */
 function advanceGameTime(minutes = 1) {
-  gameMinute += minutes;
-  if (gameMinute >= 60) {
-    gameHour += Math.floor(gameMinute / 60);
-    gameMinute = gameMinute % 60;
-    if (gameHour >= 24) {
-      gameHour = 0;
-      gameDay++;
+  gameState.gameMinute += minutes;
+  if (gameState.gameMinute >= 60) {
+    gameState.gameHour += Math.floor(gameState.gameMinute / 60);
+    gameState.gameMinute = gameState.gameMinute % 60;
+    if (gameState.gameHour >= 24) {
+      gameState.gameHour = 0;
+      gameState.gameDay++;
       WeatherManager.setRandomWeather(displayMessage); // 日が変わったら天候もランダムに更新
-      displayMessage(`新しい日になりました！Day ${gameDay}です。`);
+      displayMessage(`新しい日になりました！Day ${gameState.gameDay}です。`);
     }
   }
   updateGameTimeDisplay();
@@ -147,7 +191,7 @@ function displayMessage(message) {
 
 /**
  * モーダルの表示/非表示を切り替える共通関数
- * @param {string|null} modalType - 表示するモーダルの種類 ('inventory', 'info')。nullの場合は全てのモーダルを閉じる。
+ * @param {string|null} modalType - 表示するモーダルの種類 ('inventory', 'info', 'config')。nullの場合は全てのモーダルを閉じる。
  * @param {Object|null} [moduleInfo=null] - infoモーダル表示時に渡すモジュール情報
  */
 function toggleModal(modalType, moduleInfo = null) {
@@ -163,6 +207,13 @@ function toggleModal(modalType, moduleInfo = null) {
     infoModalContentWrapper.classList.contains("is-open")
   ) {
     infoModalContentWrapper.classList.remove("is-open");
+  }
+  // 設定モーダルを閉じる
+  if (
+    configModalContentWrapper &&
+    configModalContentWrapper.classList.contains("is-open")
+  ) {
+    configModalContentWrapper.classList.remove("is-open");
   }
   // オーバーレイを一旦閉じる (後で開く必要がある場合のみ開く)
   if (modalOverlay) {
@@ -199,6 +250,12 @@ function toggleModal(modalType, moduleInfo = null) {
     } else if (infoModalPrices) {
       infoModalPrices.style.display = "none"; // 価格情報がない場合は非表示にする
     }
+  } else if (modalType === "config") {
+    // 設定モーダルを開く
+    if (modalOverlay) modalOverlay.style.display = "block";
+    if (modalOverlay) modalOverlay.classList.add("is-open");
+    if (configModalContentWrapper)
+      configModalContentWrapper.classList.add("is-open");
   }
   // modalType === null の場合は、既に上で全てのモーダルを閉じる処理が行われているため、追加の処理は不要
 }
@@ -209,109 +266,114 @@ const gameContext = {
   // 状態
   get currentDurability() {
     // 体力から耐久に変更
-    return currentDurability;
+    return gameState.currentDurability;
   },
   set currentDurability(value) {
     // 体力から耐久に変更
-    currentDurability = value;
+    gameState.currentDurability = value;
     updateDurabilityDisplay(); // 体力表示から耐久表示に変更
   },
   get maxDurability() {
     // 体力から耐久に変更
-    return maxDurability;
+    return gameState.maxDurability;
   },
   get currentFuel() {
-    return currentFuel;
+    return gameState.currentFuel;
   },
   set currentFuel(value) {
-    currentFuel = value;
+    gameState.currentFuel = value;
     updateFuelDisplay();
   },
   get maxFuel() {
-    return maxFuel;
+    return gameState.maxFuel;
   },
   get currentMoney() {
-    return currentMoney;
+    return gameState.currentMoney;
   },
   set currentMoney(value) {
-    currentMoney = value;
+    gameState.currentMoney = value;
     updateMoneyDisplay();
   },
   get shipState() {
-    return shipState;
+    return gameState.shipState;
   },
   set shipState(value) {
-    shipState = value;
+    gameState.shipState = value;
   },
   get currentLocation() {
-    return currentLocation;
+    return gameState.currentLocation;
   },
   set currentLocation(value) {
     // 場所が変わる前にpreviousLocationを更新
-    if (currentLocation !== value) {
-      previousLocation = currentLocation;
+    if (gameState.currentLocation !== value) {
+      gameState.previousLocation = gameState.currentLocation;
     }
-    currentLocation = value;
+    gameState.currentLocation = value;
     updateMainContent(); // 場所が変わったらメインコンテンツを更新
 
     // 新しい場所が街または島の場合、船の状態を「離船中」に設定
     if (
-      currentLocation === "小さな街" ||
-      currentLocation === "大きな街" ||
-      currentLocation === "無人島"
+      gameState.currentLocation === "小さな街" ||
+      gameState.currentLocation === "大きな街" ||
+      gameState.currentLocation === "無人島"
     ) {
       gameContext.shipState = "離船中"; // ここで船の状態を「離船中」に設定
-    } else if (currentLocation === "造船所") {
+    } else if (gameState.currentLocation === "造船所") {
       // 造船所の場合
       gameContext.shipState = "停泊中"; // 造船所では停泊中に設定
-    } else if (currentLocation === "飛行船") {
+    } else if (gameState.currentLocation === "飛行船") {
       // 飛行船に戻った場合
       gameContext.shipState = "離船中"; // 飛行船では離船中に設定
-    } else if (currentLocation === "お店") {
+    } else if (gameState.currentLocation === "お店") {
       // お店の場合
       gameContext.shipState = "停泊中"; // お店では停泊中に設定
     }
 
     // 街のモジュールにcalculatePricesForVisit関数があれば呼び出す
     let currentModule;
-    if (currentLocation === "小さな街") {
+    if (gameState.currentLocation === "小さな街") {
       currentModule = SmallTown;
-    } else if (currentLocation === "大きな街") {
+    } else if (gameState.currentLocation === "大きな街") {
       currentModule = LargeTown;
-    } else if (currentLocation === "造船所") {
-      currentModule = Shipyard; // 造船所の場合
-    } else if (currentLocation === "お店") {
+    } else if (gameState.currentLocation === "造船所") {
+      // 造船所の場合
+      currentModule = Shipyard;
+    } else if (gameState.currentLocation === "お店") {
       // お店の場合
       currentModule = Shop;
     }
 
     // 各ロケーションに遷移した際の価格計算ロジックを修正
-    if (currentLocation === "小さな街" && previousLocation === "飛行船") {
+    if (
+      gameState.currentLocation === "小さな街" &&
+      gameState.previousLocation === "飛行船"
+    ) {
       // 飛行船から小さな街に停泊した場合のみ、小さな街の価格を再計算
       SmallTown.calculatePricesForVisit(null, gameContext);
     } else if (
-      currentLocation === "大きな街" &&
-      previousLocation === "飛行船"
+      gameState.currentLocation === "大きな街" &&
+      gameState.previousLocation === "飛行船"
     ) {
       // 飛行船から大きな街に停泊した場合のみ、大きな街の価格を再計算
       LargeTown.calculatePricesForVisit(null, gameContext);
     } else if (
-      currentLocation === "お店" &&
-      (previousLocation === "小さな街" || previousLocation === "大きな街")
+      gameState.currentLocation === "お店" &&
+      (gameState.previousLocation === "小さな街" ||
+        gameState.previousLocation === "大きな街")
     ) {
       // 街からお店に移動した場合、街で計算された価格倍率をお店に渡す
       let priceMultiplierToPass = null;
-      if (previousLocation === "小さな街") {
+      if (gameState.previousLocation === "小さな街") {
         const smallTownPrices = SmallTown.getCurrentVisitPrices();
         priceMultiplierToPass = smallTownPrices.priceMultiplier;
-      } else if (previousLocation === "大きな街") {
+      } else if (gameState.previousLocation === "大きな街") {
         const largeTownPrices = LargeTown.getCurrentVisitPrices();
         priceMultiplierToPass = largeTownPrices.priceMultiplier;
       }
       Shop.calculatePricesForVisit(priceMultiplierToPass, gameContext);
     } else if (
-      currentLocation === "造船所" &&
-      previousLocation === "小さな街"
+      gameState.currentLocation === "造船所" &&
+      gameState.previousLocation === "小さな街"
     ) {
       // 小さな街から造船所に移動した場合、小さな街の価格倍率を造船所に渡す
       const smallTownPrices = SmallTown.getCurrentVisitPrices();
@@ -324,10 +386,10 @@ const gameContext = {
   },
   // previousLocation のゲッターとセッターを追加
   get previousLocation() {
-    return previousLocation;
+    return gameState.previousLocation;
   },
   set previousLocation(value) {
-    previousLocation = value;
+    gameState.previousLocation = value;
   },
   get bagInventory() {
     return InventoryManager.inventoryData.bagInventory;
@@ -366,6 +428,9 @@ const gameContext = {
   displayLocationInfo: (module) => {
     toggleModal("info", module);
   },
+  // セーブ・ロード関数をgameContextに追加
+  saveGame: saveGameData,
+  loadGame: initializeGame, // ロード後に初期化処理を呼び出す
 };
 
 /**
@@ -376,24 +441,24 @@ function updateMainContent() {
 
   // 現在の場所に基づいて適切なロケーションモジュールを選択
   let currentModule;
-  if (currentLocation === "飛行船") {
+  if (gameState.currentLocation === "飛行船") {
     // 現在地が「飛行船」の場合
     currentModule = Airship;
-  } else if (currentLocation === "大きな街") {
+  } else if (gameState.currentLocation === "大きな街") {
     currentModule = LargeTown;
-  } else if (currentLocation === "小さな街") {
+  } else if (gameState.currentLocation === "小さな街") {
     currentModule = SmallTown;
-  } else if (currentLocation === "無人島") {
+  } else if (gameState.currentLocation === "無人島") {
     currentModule = Island;
-  } else if (currentLocation === "造船所") {
+  } else if (gameState.currentLocation === "造船所") {
     // 新しく追加: 造船所
     currentModule = Shipyard;
-  } else if (currentLocation === "お店") {
+  } else if (gameState.currentLocation === "お店") {
     // 新しく追加: お店
     currentModule = Shop;
   } else {
     // 未定義の場所の場合のフォールバック
-    console.error("Unknown location:", currentLocation);
+    console.error("Unknown location:", gameState.currentLocation);
     mainContentTitle.textContent = "不明な場所";
     mainContentText.innerHTML = "<p>現在地が不明です。</p>";
     return;
@@ -419,7 +484,7 @@ function updateMainContent() {
     gameContext.displayLocationInfo(currentModule); // 街の情報を表示
   });
   // 飛行船の場所では情報ボタンを表示しない
-  if (currentLocation !== "飛行船") {
+  if (gameState.currentLocation !== "飛行船") {
     mainContentTitle.appendChild(infoButton);
   }
 
@@ -529,7 +594,7 @@ function startIslandExploration(durationMinutes) {
       if (rand < 0.3) {
         // 30%の確率でお金を見つける (0.0 - 0.3)
         const foundMoney = Math.floor(Math.random() * 100) + 50; // 50から149バルク見つける
-        currentMoney += foundMoney;
+        gameState.currentMoney += foundMoney;
         updateMoneyDisplay();
         displayMessage(`${foundMoney}バルク見つけました！`);
       } else if (rand < 0.4) {
@@ -566,6 +631,7 @@ function startIslandExploration(durationMinutes) {
 
       gameContext.enableAllButtons(); // ボタンを有効に戻す
       gameContext.updateMainContent(); // 選択肢を再描画
+      saveGameData(); // 探索完了時にデータを保存
     }
   }, realTimeInterval);
 }
@@ -582,7 +648,7 @@ function startAirshipExploration(
   initialFuelCost
 ) {
   // 探索に必要な初期燃料をチェック
-  if (currentFuel < initialFuelCost) {
+  if (gameState.currentFuel < initialFuelCost) {
     displayMessage("燃料が足りません！探索を開始できません。");
     return;
   }
@@ -590,10 +656,10 @@ function startAirshipExploration(
   displayMessage(
     `飛行船での探索を開始しました。(${durationMinutes}分間の航行)`
   ); // メッセージに時間を追加したわ！
-  currentFuel -= initialFuelCost; // 初期燃料を消費
+  gameState.currentFuel -= initialFuelCost; // 初期燃料を消費
   updateFuelDisplay();
 
-  gameContext.shipState = "操縦中"; // 操縦中に変更
+  gameState.shipState = "操縦中"; // 操縦中に変更
   gameContext.disableAllButtons(); // すべてのボタンを無効にする
 
   let explorationMinutesPassed = 0;
@@ -608,28 +674,30 @@ function startAirshipExploration(
       fuelConsumptionRate > 0 &&
       explorationMinutesPassed % (1 / fuelConsumptionRate) === 0
     ) {
-      if (currentFuel > 0) {
-        currentFuel--;
+      if (gameState.currentFuel > 0) {
+        gameState.currentFuel--;
         updateFuelDisplay();
       }
     }
 
-    if (currentFuel <= 0) {
+    if (gameState.currentFuel <= 0) {
       displayMessage("燃料がなくなりました！探索を中断します。");
       clearInterval(explorationInterval);
-      gameContext.shipState = "停泊中"; // 燃料切れで停止したら停泊中に戻す
+      gameState.shipState = "停泊中"; // 燃料切れで停止したら停泊中に戻す
       gameContext.enableAllButtons(); // ボタンを有効に戻す
       gameContext.updateMainContent(); // 選択肢を再描画
+      saveGameData(); // 燃料切れ時にもデータを保存
       return;
     }
 
     if (explorationMinutesPassed >= durationMinutes) {
       clearInterval(explorationInterval);
       displayMessage("飛行船での航行探索が完了しました。");
-      gameContext.shipState = "停泊中"; // 航行完了したら停泊中に戻す
+      gameState.shipState = "停泊中"; // 航行完了したら停泊中に戻す
       gameContext.enableAllButtons(); // ボタンを有効に戻す
       gameContext.updateMainContent(); // 選択肢を再描画
       // ここに飛行船探索結果のロジックを追加 (例: イベント発生)
+      saveGameData(); // 探索完了時にデータを保存
     }
   }, realTimeInterval);
 }
@@ -660,7 +728,7 @@ function startStrollExploration(durationMinutes) {
       if (Math.random() < 0.3) {
         // 30%の確率でお金を見つける
         const foundMoney = Math.floor(Math.random() * 50) + 10; // 10から59バルク見つける
-        currentMoney += foundMoney;
+        gameState.currentMoney += foundMoney;
         updateMoneyDisplay();
         displayMessage(`${foundMoney}バルク見つけました！`);
       } else {
@@ -669,6 +737,7 @@ function startStrollExploration(durationMinutes) {
 
       gameContext.enableAllButtons(); // ボタンを有効に戻す
       gameContext.updateMainContent(); // 選択肢を再描画
+      saveGameData(); // 散策完了時にデータを保存
     }
   }, realTimeInterval);
 }
@@ -686,35 +755,22 @@ function getRandomTownType() {
  * 保存済みデータがあればそれをロードし、なければデフォルト値で初期化する
  */
 function initializeGame() {
-  // TODO: 保存済みデータのロード処理をここに実装
-  // 例: const savedData = loadGameData();
-  const savedData = null; // 今はセーブ機能がないのでnullとする
+  const savedData = loadGameData();
 
   if (savedData) {
-    // TODO: 保存済みデータでゲーム状態を復元する
+    // 保存済みデータでゲーム状態を復元する
+    Object.assign(gameState, savedData); // savedDataのプロパティをgameStateにコピー
+    // インベントリはInventoryManagerで別途初期化が必要
+    InventoryManager.setBagInventory(gameState.bagInventory);
+    InventoryManager.setShipContainerInventory(
+      gameState.shipContainerInventory
+    );
     console.log("保存済みデータをロードしました。");
-    // currentDurability = savedData.durability;
-    // currentFuel = savedData.fuel;
-    // ...
   } else {
-    // デフォルト値で初期化
-    maxDurability = 20; // 体力から耐久に変更
-    currentDurability = maxDurability; // 体力から耐久に変更
-    maxFuel = 100;
-    currentFuel = maxFuel;
-    currentMoney = 100000;
-    shipState = "離船中";
-    currentLocation = "小さな街";
-    previousLocation = "飛行船";
-    gameHour = 8;
-    gameMinute = 0;
-    gameDay = 1;
-
-    // 初回起動時の「小さな街」の価格設定
-    SmallTown.calculatePricesForVisit(null, gameContext); // gameContextを渡す
-    // LargeTownもここで初期化する必要がある場合は追加
-    LargeTown.calculatePricesForVisit(null, gameContext);
-
+    // デフォルト値で初期化 (gameStateの初期値が使われる)
+    // InventoryManagerのインベントリも初期化
+    InventoryManager.setBagInventory([]);
+    InventoryManager.setShipContainerInventory([]);
     console.log("新しいゲームを開始しました。");
   }
 
@@ -727,6 +783,11 @@ function initializeGame() {
   WeatherManager.setRandomWeather(displayMessage, true); // 天候を設定（メッセージ抑制）
   updateMainContent(); // メインコンテンツを初期表示
   gameContext.displayMessage("ゲームを開始しました！小さな街に到着しました。");
+
+  // 初回起動時またはロード時に価格を再計算
+  SmallTown.calculatePricesForVisit(null, gameContext); // gameContextを渡す
+  LargeTown.calculatePricesForVisit(null, gameContext);
+  // お店や造船所は、それぞれの場所へ移動したときに価格が計算されるため、ここでは不要
 }
 
 // ページロード時に初期設定を行う
@@ -745,6 +806,9 @@ window.onload = () => {
   infoModalTitle = document.getElementById("infoModalTitle");
   infoModalText = document.getElementById("infoModalText");
   infoModalPrices = document.getElementById("infoModalPrices");
+  configModalContentWrapper = document.getElementById(
+    "configModalContentWrapper"
+  ); // 新しく追加
   gameTimeDisplay = document.getElementById("gameTimeDisplay");
   weatherDisplay = document.getElementById("weatherDisplay");
   weatherIconContainer = document.querySelector(".weather-icon-container");
@@ -758,6 +822,8 @@ window.onload = () => {
   mainContentText = document.getElementById("mainContentText");
   choicesContainer = document.getElementById("choicesContainer");
   mainContentTitle = document.getElementById("mainContentTitle");
+  configButton = document.getElementById("configButton"); // 新しく追加
+  resetGameButton = document.getElementById("resetGameButton"); // 新しく追加
 
   // 2. 各マネージャーの初期化 (DOM要素が揃った後)
   WeatherManager.initWeather(
@@ -786,22 +852,35 @@ window.onload = () => {
     const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
     const isInfoModalCurrentlyOpen =
       infoModalContentWrapper.classList.contains("is-open");
+    const isConfigModalCurrentlyOpen = // 新しく追加
+      configModalContentWrapper.classList.contains("is-open"); // 新しく追加
 
-    if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+    if (
+      isInventoryCurrentlyOpen ||
+      isInfoModalCurrentlyOpen ||
+      isConfigModalCurrentlyOpen
+    ) {
+      // 条件に設定モーダルを追加
       if (event.key === "e") {
         if (isInventoryCurrentlyOpen) {
           event.preventDefault();
           toggleModal(null);
-        } else if (isInfoModalCurrentlyOpen) {
+        } else if (isInfoModalCurrentlyOpen || isConfigModalCurrentlyOpen) {
+          // 情報モーダルか設定モーダルが開いている場合
           event.preventDefault();
         }
       } else if (event.key === "i") {
         if (isInfoModalCurrentlyOpen) {
           event.preventDefault();
           toggleModal(null);
-        } else {
+        } else if (isInventoryCurrentlyOpen || isConfigModalCurrentlyOpen) {
+          // インベントリモーダルか設定モーダルが開いている場合
           event.preventDefault();
         }
+      } else if (event.key === "Escape") {
+        // Escapeキーでモーダルを閉じる
+        event.preventDefault();
+        toggleModal(null);
       } else {
         event.preventDefault();
       }
@@ -812,20 +891,20 @@ window.onload = () => {
       } else if (event.key === "i") {
         event.preventDefault();
         let currentModule;
-        if (currentLocation === "飛行船") {
+        if (gameState.currentLocation === "飛行船") {
           currentModule = Airship;
-        } else if (currentLocation === "大きな街") {
+        } else if (gameState.currentLocation === "大きな街") {
           currentModule = LargeTown;
-        } else if (currentLocation === "小さな街") {
+        } else if (gameState.currentLocation === "小さな街") {
           currentModule = SmallTown;
-        } else if (currentLocation === "無人島") {
+        } else if (gameState.currentLocation === "無人島") {
           currentModule = Island;
-        } else if (currentLocation === "造船所") {
+        } else if (gameState.currentLocation === "造船所") {
           currentModule = Shipyard;
-        } else if (currentLocation === "お店") {
+        } else if (gameState.currentLocation === "お店") {
           currentModule = Shop;
         }
-        if (currentLocation !== "飛行船" && currentModule) {
+        if (gameState.currentLocation !== "飛行船" && currentModule) {
           toggleModal("info", currentModule);
         }
       }
@@ -836,15 +915,39 @@ window.onload = () => {
     toggleModal("inventory");
   });
 
+  configButton.addEventListener("click", () => {
+    // 新しく追加：設定ボタンのイベントリスナー
+    toggleModal("config");
+  });
+
+  // 「ゲームをリセット」ボタンのテキストを「ゲームを終了」に変更
+  if (resetGameButton) {
+    resetGameButton.textContent = "ゲームを終了";
+    resetGameButton.addEventListener("click", () => {
+      // index.html にリダイレクト
+      window.location.href = "index.html";
+    });
+  }
+
   modalOverlay.addEventListener("click", (event) => {
     const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
     const isInfoModalCurrentlyOpen =
       infoModalContentWrapper.classList.contains("is-open");
+    const isConfigModalCurrentlyOpen = // 新しく追加
+      configModalContentWrapper.classList.contains("is-open"); // 新しく追加
 
     if (event.target === modalOverlay) {
-      if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+      if (
+        isInventoryCurrentlyOpen ||
+        isInfoModalCurrentlyOpen ||
+        isConfigModalCurrentlyOpen
+      ) {
+        // 条件に設定モーダルを追加
         toggleModal(null);
       }
     }
   });
+
+  // ページを離れる前にデータを保存するイベントリスナー
+  window.addEventListener("beforeunload", saveGameData);
 };

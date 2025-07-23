@@ -133,6 +133,7 @@ export function executeAction(actionName, gameContext) {
       gameContext.displayMessage("不明な行動です。");
       break;
   }
+  gameContext.saveGame(); // アクション実行後にデータを保存
 }
 
 /**
