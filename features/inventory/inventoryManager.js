@@ -58,23 +58,29 @@ export function initInventory(
   inventoryData.allItemDefinitions = allItemDefinitions;
 
   // 初期アイテムを追加（メッセージ表示を抑制）
-  const fuelTankDef = inventoryData.allItemDefinitions.find(
-    (item) => item.id === "fuel_tank"
-  );
-  if (fuelTankDef) {
-    addItemToBag(fuelTankDef, 2, true); // suppressMessageをtrueに固定
-  }
-  const repairKitDef = inventoryData.allItemDefinitions.find(
-    (item) => item.id === "repair_kit"
-  );
-  if (repairKitDef) {
-    addItemToBag(repairKitDef, 2, true); // suppressMessageをtrueに固定
-  }
-  const mapDef = inventoryData.allItemDefinitions.find(
-    (item) => item.id === "map"
-  );
-  if (mapDef) {
-    addItemToBag(mapDef, 1, true); // suppressMessageをtrueに固定
+  // ロード時にはaddItemToBag/ShipContainerは呼ばれないため、ここでは初回ゲーム開始時のみ実行
+  if (
+    inventoryData.bagInventory.length === 0 &&
+    inventoryData.shipContainerInventory.length === 0
+  ) {
+    const fuelTankDef = inventoryData.allItemDefinitions.find(
+      (item) => item.id === "fuel_tank"
+    );
+    if (fuelTankDef) {
+      addItemToBag(fuelTankDef, 2, true); // suppressMessageをtrueに固定
+    }
+    const repairKitDef = inventoryData.allItemDefinitions.find(
+      (item) => item.id === "repair_kit"
+    );
+    if (repairKitDef) {
+      addItemToBag(repairKitDef, 2, true); // suppressMessageをtrueに固定
+    }
+    const mapDef = inventoryData.allItemDefinitions.find(
+      (item) => item.id === "map"
+    );
+    if (mapDef) {
+      addItemToBag(mapDef, 1, true); // suppressMessageをtrueに固定
+    }
   }
 
   // 初期アイテム追加後にインベントリの描画を行う
@@ -1005,4 +1011,38 @@ function handleDrop(event) {
     renderAvailableItems();
   }
   draggedItemInfo = null; // ドラッグ情報をクリア
+}
+
+/**
+ * 現在のカバンの中身を返す
+ * @returns {Array<Object|null>} カバンの中身の配列
+ */
+export function getBagInventory() {
+  return inventoryData.bagInventory;
+}
+
+/**
+ * 現在の船体コンテナの中身を返す
+ * @returns {Array<Object|string|null>} 船体コンテナの中身の配列
+ */
+export function getShipContainerInventory() {
+  return inventoryData.shipContainerInventory;
+}
+
+/**
+ * カバンの中身を設定する（ロード用）
+ * @param {Array<Object|null>} newInventory - 新しいカバンの中身
+ */
+export function setBagInventory(newInventory) {
+  inventoryData.bagInventory = newInventory;
+  renderAvailableItems(); // UIを更新
+}
+
+/**
+ * 船体コンテナの中身を設定する（ロード用）
+ * @param {Array<Object|string|null>} newInventory - 新しい船体コンテナの中身
+ */
+export function setShipContainerInventory(newInventory) {
+  inventoryData.shipContainerInventory = newInventory;
+  renderInventoryGrid(); // UIを更新
 }

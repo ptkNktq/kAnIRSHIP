@@ -84,7 +84,7 @@ export function getCurrentVisitPrices() {
   return currentVisitPrices;
 }
 
-export function getActions() {
+export function getActions(gameContext) {
   return [
     {
       subtitle: "行動",
@@ -143,6 +143,7 @@ export function executeAction(actionName, gameContext) {
       gameContext.displayMessage("不明な行動です。");
       break;
   }
+  gameContext.saveGame(); // アクション実行後にデータを保存
 }
 
 /**
