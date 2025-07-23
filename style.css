@@ -56,8 +56,8 @@ body {
   box-sizing: border-box;
 }
 
-/* トップボタンエリアのスタイル */
-.top-buttons-area {
+/* メニューボタンエリアのスタイル */
+.menu-buttons-area {
   display: flex;
   flex-direction: row; /* ボタンを横に並べる */
   justify-content: space-between; /* 均等に配置 */
@@ -73,8 +73,8 @@ body {
   order: 2; /* ログエリアの下に表示するためにorderを2にする */
 }
 
-/* 新しく追加: トップボタンのスタイル */
-.top-button {
+/* 新しく追加: メニューボタンのスタイル */
+.menu-button {
   width: 50px; /* 正方形 */
   height: 50px; /* 正方形 */
   background-color: rgba(0, 121, 107, 0.1); /* 情報ボタンと同じ薄い背景色 */
@@ -91,13 +91,13 @@ body {
   flex-shrink: 0; /* 縮小しない */
 }
 
-.top-button:hover {
+.menu-button:hover {
   background-color: rgba(0, 121, 107, 0.2); /* ホバー時の背景色 */
   transform: translateY(-1px); /* 少し上に移動 */
   box-shadow: none; /* 影なし */
 }
 
-.top-button:active {
+.menu-button:active {
   background-color: rgba(0, 121, 107, 0.3); /* クリック時の背景色 */
   transform: translateY(1px); /* 少し押し込む */
   box-shadow: none; /* 影なし */
@@ -208,6 +208,70 @@ body {
   margin-top: 10px; /* 説明文との間に少しスペース */
   white-space: pre-wrap; /* 改行を有効にする */
   font-family: "DotGothic16", sans-serif; /* ポクセル風フォントを適用 */
+}
+
+/* 設定モーダルに特化したスタイル (新しく追加したわ！) */
+.config-modal {
+  flex-direction: column; /* 縦並び */
+  justify-content: center;
+  background-color: rgba(44, 62, 80, 0.95); /* 半透明の暗い背景 */
+  border: 2px solid #34495e; /* ボーダー */
+  border-radius: 10px; /* 角を丸く */
+  padding: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* 影 */
+  max-width: 500px; /* 最大幅 */
+  width: 80%; /* 幅の調整 */
+  height: auto; /* 高さ自動調整 */
+}
+
+.config-modal-content {
+  text-align: center;
+  color: #ecf0f1;
+}
+
+.config-modal-title {
+  color: #f39c12; /* オレンジ色で強調 */
+  font-size: 1.5em;
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #505050;
+  padding-bottom: 5px;
+  font-family: "DotGothic16", sans-serif;
+}
+
+.config-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.config-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+}
+
+.config-option:last-child {
+  border-bottom: none;
+}
+
+.config-option label {
+  font-size: 1.1em;
+  color: #ecf0f1;
+  font-family: "DotGothic16", sans-serif;
+}
+
+.config-option input[type="range"],
+.config-option select {
+  width: 60%;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #505050;
+  background-color: #34495e;
+  color: #ecf0f1;
+  font-family: "DotGothic16", sans-serif;
 }
 
 /* インベントリコンテナのスタイル */
@@ -827,14 +891,14 @@ body {
     gap: 10px; /* ログエリアとボタンエリアの間の隙間を調整したわ！ */
   }
 
-  /* トップボタンエリアのレスポンシブ調整 */
-  .top-buttons-area {
+  /* メニューボタンエリアのレスポンシブ調整 */
+  .menu-buttons-area {
     padding: 5px; /* パディングを調整したわ！ */
     padding-right: 5px; /* 右側のパディングも調整したわ！ */
     gap: 8px;
   }
 
-  .top-button {
+  .menu-button {
     width: 45px;
     height: 45px;
     font-size: 1.6em;
@@ -853,7 +917,8 @@ body {
   }
 
   .left-ui-container,
-  .main-content-area {
+  .main-content-area,
+  .message-area {
     padding: 10px;
     border-width: 2px;
     border-radius: 10px;
@@ -936,15 +1001,15 @@ body {
     height: auto; /* レスポンシブでは自動調整 */
   }
 
-  /* トップボタンエリアのレスポンシブ調整 */
-  .top-buttons-area {
+  /* メニューボタンエリアのレスポンシブ調整 */
+  .menu-buttons-area {
     padding: 8px;
     padding-right: 8px;
     gap: 8px;
     justify-content: space-around; /* 均等に配置 */
   }
 
-  .top-button {
+  .menu-button {
     width: 40px;
     height: 40px;
     font-size: 1.4em;
@@ -1086,19 +1151,19 @@ body {
     grid-column: 1;
     grid-row: 3; /* 3行目に配置 */
     width: 90%; /* 画面幅の90% */
-    max-width: 300px; /* 最大幅を設定 */
+    max-width: 300px; /* 最大幅を調整 */
     margin: 0 auto; /* 中央寄せ */
     height: auto; /* レスポンシブでは自動調整 */
   }
 
-  /* トップボタンエリアのレスポンシブ調整 */
-  .top-buttons-area {
+  /* メニューボタンエリアのレスポンシブ調整 */
+  .menu-buttons-area {
     padding: 5px;
     padding-right: 5px;
     gap: 5px;
   }
 
-  .top-button {
+  .menu-button {
     width: 35px;
     height: 35px;
     font-size: 1.2em;

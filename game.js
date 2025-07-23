@@ -26,6 +26,7 @@ let infoModalContentWrapper;
 let infoModalTitle;
 let infoModalText;
 let infoModalPrices; // 新しく追加：価格表示用の要素
+let configModalContentWrapper; // 新しく追加：設定モーダルの要素
 let gameTimeDisplay;
 let weatherDisplay;
 let weatherIconContainer;
@@ -40,6 +41,8 @@ let bagIcon;
 let mainContentText;
 let choicesContainer;
 let mainContentTitle;
+let configButton; // 新しく追加：設定ボタンの要素
+let resetGameButton; // 新しく追加：ゲームリセットボタンの要素
 
 // ゲームの状態変数
 let gameState = {
@@ -188,7 +191,7 @@ function displayMessage(message) {
 
 /**
  * モーダルの表示/非表示を切り替える共通関数
- * @param {string|null} modalType - 表示するモーダルの種類 ('inventory', 'info')。nullの場合は全てのモーダルを閉じる。
+ * @param {string|null} modalType - 表示するモーダルの種類 ('inventory', 'info', 'config')。nullの場合は全てのモーダルを閉じる。
  * @param {Object|null} [moduleInfo=null] - infoモーダル表示時に渡すモジュール情報
  */
 function toggleModal(modalType, moduleInfo = null) {
@@ -204,6 +207,13 @@ function toggleModal(modalType, moduleInfo = null) {
     infoModalContentWrapper.classList.contains("is-open")
   ) {
     infoModalContentWrapper.classList.remove("is-open");
+  }
+  // 設定モーダルを閉じる
+  if (
+    configModalContentWrapper &&
+    configModalContentWrapper.classList.contains("is-open")
+  ) {
+    configModalContentWrapper.classList.remove("is-open");
   }
   // オーバーレイを一旦閉じる (後で開く必要がある場合のみ開く)
   if (modalOverlay) {
@@ -240,6 +250,12 @@ function toggleModal(modalType, moduleInfo = null) {
     } else if (infoModalPrices) {
       infoModalPrices.style.display = "none"; // 価格情報がない場合は非表示にする
     }
+  } else if (modalType === "config") {
+    // 設定モーダルを開く
+    if (modalOverlay) modalOverlay.style.display = "block";
+    if (modalOverlay) modalOverlay.classList.add("is-open");
+    if (configModalContentWrapper)
+      configModalContentWrapper.classList.add("is-open");
   }
   // modalType === null の場合は、既に上で全てのモーダルを閉じる処理が行われているため、追加の処理は不要
 }
@@ -790,6 +806,9 @@ window.onload = () => {
   infoModalTitle = document.getElementById("infoModalTitle");
   infoModalText = document.getElementById("infoModalText");
   infoModalPrices = document.getElementById("infoModalPrices");
+  configModalContentWrapper = document.getElementById(
+    "configModalContentWrapper"
+  ); // 新しく追加
   gameTimeDisplay = document.getElementById("gameTimeDisplay");
   weatherDisplay = document.getElementById("weatherDisplay");
   weatherIconContainer = document.querySelector(".weather-icon-container");
@@ -803,6 +822,8 @@ window.onload = () => {
   mainContentText = document.getElementById("mainContentText");
   choicesContainer = document.getElementById("choicesContainer");
   mainContentTitle = document.getElementById("mainContentTitle");
+  configButton = document.getElementById("configButton"); // 新しく追加
+  resetGameButton = document.getElementById("resetGameButton"); // 新しく追加
 
   // 2. 各マネージャーの初期化 (DOM要素が揃った後)
   WeatherManager.initWeather(
@@ -831,22 +852,35 @@ window.onload = () => {
     const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
     const isInfoModalCurrentlyOpen =
       infoModalContentWrapper.classList.contains("is-open");
+    const isConfigModalCurrentlyOpen = // 新しく追加
+      configModalContentWrapper.classList.contains("is-open"); // 新しく追加
 
-    if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+    if (
+      isInventoryCurrentlyOpen ||
+      isInfoModalCurrentlyOpen ||
+      isConfigModalCurrentlyOpen
+    ) {
+      // 条件に設定モーダルを追加
       if (event.key === "e") {
         if (isInventoryCurrentlyOpen) {
           event.preventDefault();
           toggleModal(null);
-        } else if (isInfoModalCurrentlyOpen) {
+        } else if (isInfoModalCurrentlyOpen || isConfigModalCurrentlyOpen) {
+          // 情報モーダルか設定モーダルが開いている場合
           event.preventDefault();
         }
       } else if (event.key === "i") {
         if (isInfoModalCurrentlyOpen) {
           event.preventDefault();
           toggleModal(null);
-        } else {
+        } else if (isInventoryCurrentlyOpen || isConfigModalCurrentlyOpen) {
+          // インベントリモーダルか設定モーダルが開いている場合
           event.preventDefault();
         }
+      } else if (event.key === "Escape") {
+        // Escapeキーでモーダルを閉じる
+        event.preventDefault();
+        toggleModal(null);
       } else {
         event.preventDefault();
       }
@@ -881,13 +915,34 @@ window.onload = () => {
     toggleModal("inventory");
   });
 
+  configButton.addEventListener("click", () => {
+    // 新しく追加：設定ボタンのイベントリスナー
+    toggleModal("config");
+  });
+
+  // 「ゲームをリセット」ボタンのテキストを「ゲームを終了」に変更
+  if (resetGameButton) {
+    resetGameButton.textContent = "ゲームを終了";
+    resetGameButton.addEventListener("click", () => {
+      // index.html にリダイレクト
+      window.location.href = "index.html";
+    });
+  }
+
   modalOverlay.addEventListener("click", (event) => {
     const isInventoryCurrentlyOpen = InventoryManager.isInventoryOpen();
     const isInfoModalCurrentlyOpen =
       infoModalContentWrapper.classList.contains("is-open");
+    const isConfigModalCurrentlyOpen = // 新しく追加
+      configModalContentWrapper.classList.contains("is-open"); // 新しく追加
 
     if (event.target === modalOverlay) {
-      if (isInventoryCurrentlyOpen || isInfoModalCurrentlyOpen) {
+      if (
+        isInventoryCurrentlyOpen ||
+        isInfoModalCurrentlyOpen ||
+        isConfigModalCurrentlyOpen
+      ) {
+        // 条件に設定モーダルを追加
         toggleModal(null);
       }
     }
